@@ -7,6 +7,7 @@ import '../core/firebase/firebase_initializer.dart';
 import '../core/logging/app_logger.dart';
 import 'app.dart';
 import 'di/core_providers.dart';
+import 'provider_retry.dart';
 
 /// Starts the app: builds config and logger, installs global error hooks and
 /// wraps the app in the root [ProviderScope].
@@ -49,6 +50,7 @@ Future<void> bootstrap({
 
   runApp(
     ProviderScope(
+      retry: providerRetry,
       overrides: [
         appConfigProvider.overrideWithValue(appConfig),
         appLoggerProvider.overrideWithValue(logger),

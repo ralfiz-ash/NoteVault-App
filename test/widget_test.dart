@@ -3,7 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:notevalult/app/app.dart';
 import 'package:notevalult/app/di/core_providers.dart';
 import 'package:notevalult/core/config/app_config.dart';
-import 'package:notevalult/core/logging/app_logger.dart';
+
+import 'helpers/test_helpers.dart';
 
 void main() {
   testWidgets('App starts under ProviderScope and shows the home route', (
@@ -13,7 +14,7 @@ void main() {
       ProviderScope(
         overrides: [
           appConfigProvider.overrideWithValue(const AppConfig()),
-          appLoggerProvider.overrideWithValue(const NoOpLogger()),
+          ...appTestOverrides(),
         ],
         child: const NoteVaultApp(),
       ),
