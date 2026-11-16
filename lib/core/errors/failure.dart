@@ -75,6 +75,16 @@ class NotFoundFailure extends Failure {
   });
 }
 
+/// The user deliberately stopped the operation (for example closed the
+/// Google account picker). Usually not shown as an error.
+class CancelledFailure extends Failure {
+  const CancelledFailure({
+    super.message = 'The operation was cancelled.',
+    super.cause,
+    super.stackTrace,
+  });
+}
+
 /// Anything not recognised by a mapper.
 class UnknownFailure extends Failure {
   const UnknownFailure({
