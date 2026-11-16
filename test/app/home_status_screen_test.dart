@@ -18,7 +18,7 @@ void main() {
   late ProviderContainer container;
 
   Future<void> pumpApp(WidgetTester tester) async {
-    auth = FakeAuthRepository();
+    auth = FakeAuthRepository.signedIn(testUser);
     notes = FakeNoteRepository();
     connectivity = FakeConnectivityRepository();
     container = createContainer(
@@ -42,19 +42,18 @@ void main() {
     tester,
   ) async {
     await pumpApp(tester);
-    auth.emit(null);
     connectivity.emit(ConnectivityStatus.connected);
     await tester.pumpAndSettle();
 
-    expect(find.text('Signed out'), findsOneWidget);
+    expect(find.text('Signed in as tester@example.com'), findsOneWidget);
     expect(find.text('No notes yet'), findsOneWidget);
     expect(find.text('Connected'), findsOneWidget);
 
-    auth.emit(const AppUser(uid: 'u1'));
+    auth.emit(const AppUser(uid: 'u1', email: 'other@example.com'));
     notes.seed([buildNote(id: 'a'), buildNote(id: 'b')]);
     await tester.pumpAndSettle();
 
-    expect(find.text('Signed in (u1)'), findsOneWidget);
+    expect(find.text('Signed in as other@example.com'), findsOneWidget);
     expect(find.text('2 notes'), findsOneWidget);
   });
 

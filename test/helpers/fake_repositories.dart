@@ -12,6 +12,11 @@ import 'package:notevalult/features/sync/domain/repositories/connectivity_reposi
 /// Like Firebase, a new subscriber first gets the current session (once one
 /// has been emitted), then every change.
 class FakeAuthRepository implements AuthRepository {
+  FakeAuthRepository();
+
+  /// Starts with a restored session for [user].
+  FakeAuthRepository.signedIn(AppUser user) : _current = user, _known = true;
+
   final _controller = StreamController<AppUser?>.broadcast();
   AppUser? _current;
   bool _known = false;
@@ -23,6 +28,38 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   void emitError(Object error) => _controller.addError(error);
+
+  /// The user the next successful sign-in / registration returns.
+  AppUser nextUser = const AppUser(uid: 'u1', email: 'a@b.c');
+
+  /// If set, the next call throws it.
+  Object? nextError;
+
+  /// If set, the next call waits for it (to observe loading states).
+  Completer<void>? gate;
+
+  /// Calls made, without passwords.
+  final calls = <String>[];
+
+  Future<void> _step(String call) async {
+    calls.add(call);
+    final wait = gate;
+    if (wait != null) {
+      gate = null;
+      await wait.future;
+    }
+    final error = nextError;
+    if (error != null) {
+      nextError = null;
+      throw error;
+    }
+  }
+
+  Future<AppUser> _signIn(String call) async {
+    await _step(call);
+    emit(nextUser);
+    return nextUser;
+  }
 
   @override
   AppUser? get currentUser => _current;
@@ -37,23 +74,25 @@ class FakeAuthRepository implements AuthRepository {
   Future<AppUser> signInWithEmailAndPassword({
     required String email,
     required String password,
-  }) => throw UnimplementedError();
+  }) => _signIn('signIn:$email');
 
   @override
   Future<AppUser> registerWithEmailAndPassword({
     required String email,
     required String password,
-  }) => throw UnimplementedError();
+  }) => _signIn('register:$email');
 
   @override
-  Future<AppUser> signInWithGoogle() => throw UnimplementedError();
+  Future<AppUser> signInWithGoogle() => _signIn('google');
 
   @override
-  Future<void> sendPasswordResetEmail(String email) =>
-      throw UnimplementedError();
+  Future<void> sendPasswordResetEmail(String email) => _step('reset:$email');
 
   @override
-  Future<void> signOut() async => emit(null);
+  Future<void> signOut() async {
+    await _step('signOut');
+    emit(null);
+  }
 }
 
 /// In-memory [NoteRepository] with the same semantics as the real one

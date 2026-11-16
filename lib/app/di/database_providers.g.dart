@@ -8,38 +8,102 @@ part of 'database_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// The app database. It is opened lazily on the first query, and closed when
-/// the container is disposed. Tests override this provider with an in-memory
-/// database.
-///
 /// - Android / iOS: a SQLite file in the app's documents directory.
 /// - Web: SQLite compiled to WebAssembly (OPFS or IndexedDB storage). Needs
 ///   `web/sqlite3.wasm` and `web/drift_worker.js`, produced by
 ///   `tool/build_web_db_assets.sh`.
 
-@ProviderFor(appDatabase)
-final appDatabaseProvider = AppDatabaseProvider._();
+@ProviderFor(databaseOpener)
+final databaseOpenerProvider = DatabaseOpenerProvider._();
 
-/// The app database. It is opened lazily on the first query, and closed when
-/// the container is disposed. Tests override this provider with an in-memory
-/// database.
-///
 /// - Android / iOS: a SQLite file in the app's documents directory.
 /// - Web: SQLite compiled to WebAssembly (OPFS or IndexedDB storage). Needs
 ///   `web/sqlite3.wasm` and `web/drift_worker.js`, produced by
 ///   `tool/build_web_db_assets.sh`.
 
-final class AppDatabaseProvider
-    extends $FunctionalProvider<AppDatabase, AppDatabase, AppDatabase>
-    with $Provider<AppDatabase> {
-  /// The app database. It is opened lazily on the first query, and closed when
-  /// the container is disposed. Tests override this provider with an in-memory
-  /// database.
-  ///
+final class DatabaseOpenerProvider
+    extends $FunctionalProvider<DatabaseOpener, DatabaseOpener, DatabaseOpener>
+    with $Provider<DatabaseOpener> {
   /// - Android / iOS: a SQLite file in the app's documents directory.
   /// - Web: SQLite compiled to WebAssembly (OPFS or IndexedDB storage). Needs
   ///   `web/sqlite3.wasm` and `web/drift_worker.js`, produced by
   ///   `tool/build_web_db_assets.sh`.
+  DatabaseOpenerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'databaseOpenerProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$databaseOpenerHash();
+
+  @$internal
+  @override
+  $ProviderElement<DatabaseOpener> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  DatabaseOpener create(Ref ref) {
+    return databaseOpener(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DatabaseOpener value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DatabaseOpener>(value),
+    );
+  }
+}
+
+String _$databaseOpenerHash() => r'13100d3b499af9e8233302e94641ebc6e05f7046';
+
+/// The signed-in user's local database (one database per user, so one user's
+/// notes, folders and tags can never be shown to another user of the same
+/// device).
+///
+/// Rebuilt when the user changes: the previous database is closed
+/// (`ref.onDispose`) and every data source, repository and provider built on
+/// it is rebuilt for the new user. Fails with [AuthFailure] while nobody is
+/// signed in (the router keeps signed-out users on the auth screens).
+///
+/// It is opened lazily on the first query. Tests override this provider (or
+/// [databaseOpenerProvider]) with an in-memory database.
+
+@ProviderFor(appDatabase)
+final appDatabaseProvider = AppDatabaseProvider._();
+
+/// The signed-in user's local database (one database per user, so one user's
+/// notes, folders and tags can never be shown to another user of the same
+/// device).
+///
+/// Rebuilt when the user changes: the previous database is closed
+/// (`ref.onDispose`) and every data source, repository and provider built on
+/// it is rebuilt for the new user. Fails with [AuthFailure] while nobody is
+/// signed in (the router keeps signed-out users on the auth screens).
+///
+/// It is opened lazily on the first query. Tests override this provider (or
+/// [databaseOpenerProvider]) with an in-memory database.
+
+final class AppDatabaseProvider
+    extends $FunctionalProvider<AppDatabase, AppDatabase, AppDatabase>
+    with $Provider<AppDatabase> {
+  /// The signed-in user's local database (one database per user, so one user's
+  /// notes, folders and tags can never be shown to another user of the same
+  /// device).
+  ///
+  /// Rebuilt when the user changes: the previous database is closed
+  /// (`ref.onDispose`) and every data source, repository and provider built on
+  /// it is rebuilt for the new user. Fails with [AuthFailure] while nobody is
+  /// signed in (the router keeps signed-out users on the auth screens).
+  ///
+  /// It is opened lazily on the first query. Tests override this provider (or
+  /// [databaseOpenerProvider]) with an in-memory database.
   AppDatabaseProvider._()
     : super(
         from: null,
@@ -73,7 +137,7 @@ final class AppDatabaseProvider
   }
 }
 
-String _$appDatabaseHash() => r'50b4a46fcf0dc5b52322c7ce279b2a1206ecc381';
+String _$appDatabaseHash() => r'0b43a7d87cca0107eca1afb57eb018495965b624';
 
 @ProviderFor(localDatabaseExceptionMapper)
 final localDatabaseExceptionMapperProvider =

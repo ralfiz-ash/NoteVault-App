@@ -8,29 +8,26 @@ part of 'app_router.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// The app's single [GoRouter].
+/// The app's single [GoRouter], guarded by the auth state ([authRedirect]).
 ///
-/// Only the routing foundation exists for now. Feature routes (auth, notes,
-/// settings, ...) are added here in their own phases, and auth-based
-/// redirects will watch the auth state provider once it exists.
+/// The router is created once; auth changes only re-run the redirect (via
+/// [GoRouter.refreshListenable]) instead of rebuilding the router.
 
 @ProviderFor(appRouter)
 final appRouterProvider = AppRouterProvider._();
 
-/// The app's single [GoRouter].
+/// The app's single [GoRouter], guarded by the auth state ([authRedirect]).
 ///
-/// Only the routing foundation exists for now. Feature routes (auth, notes,
-/// settings, ...) are added here in their own phases, and auth-based
-/// redirects will watch the auth state provider once it exists.
+/// The router is created once; auth changes only re-run the redirect (via
+/// [GoRouter.refreshListenable]) instead of rebuilding the router.
 
 final class AppRouterProvider
     extends $FunctionalProvider<GoRouter, GoRouter, GoRouter>
     with $Provider<GoRouter> {
-  /// The app's single [GoRouter].
+  /// The app's single [GoRouter], guarded by the auth state ([authRedirect]).
   ///
-  /// Only the routing foundation exists for now. Feature routes (auth, notes,
-  /// settings, ...) are added here in their own phases, and auth-based
-  /// redirects will watch the auth state provider once it exists.
+  /// The router is created once; auth changes only re-run the redirect (via
+  /// [GoRouter.refreshListenable]) instead of rebuilding the router.
   AppRouterProvider._()
     : super(
         from: null,
@@ -64,4 +61,4 @@ final class AppRouterProvider
   }
 }
 
-String _$appRouterHash() => r'a8711ec90eaffb51ab365b44d8162e402d73d348';
+String _$appRouterHash() => r'66c321ba8a0b805cc547a3785fb8d7c366866a88';

@@ -257,6 +257,46 @@ ProviderScope (bootstrap: config, logger, retry policy)
 - **Tests**: `createContainer(overrides: ...)` and `appTestOverrides()` in
   `test/helpers/`, with fakes in `test/helpers/fake_repositories.dart`.
 
+## Authentication (Phase 6)
+
+```
+Login / Register / Forgot password screens (presentation)
+   | ref.read(authControllerProvider.notifier) / passwordResetControllerProvider
+   v
+Use cases: SignInWithEmail, RegisterWithEmail, SignInWithGoogle,
+           SendPasswordReset, SignOut, ObserveAuthState   (domain)
+   v
+AuthRepository -> AuthRepositoryImpl -> FirebaseAuthRemoteDataSource (data)
+```
+
+- **Validation**: `AuthValidators` (domain, pure Dart) is the single set of
+  rules. Forms use it for field messages before anything is sent; the use
+  cases call it again as a safety net (`ValidationFailure`).
+- **Controllers**: `AuthController` (sign-in, register, Google, sign-out) and
+  `PasswordResetController` expose `AsyncValue`. While loading, buttons and
+  fields are disabled and repeated requests are ignored. Errors are shown
+  once, by the visible screen only; a cancelled Google sign-in shows nothing.
+  Passwords go straight to the use case and are never kept in state, stored
+  or logged.
+- **Routing guard** (`lib/app/router/auth_redirect.dart`): one redirect for
+  all routes, re-run when `authStateProvider` changes. Session unknown ->
+  splash; signed out -> `/login` (with `/login/register` and
+  `/login/forgot-password`); signed in -> the app. Screens do not check auth
+  themselves and do not navigate after sign-in.
+- **Session persistence**: Firebase Authentication restores the session on
+  restart; the app stores nothing.
+- **User isolation**: `currentUserIdProvider` (app/di) is the boundary.
+  - Each user has their own local database file (`notevault_<uid>`).
+    `appDatabaseProvider` watches the user id, so signing out or switching
+    users closes the old database and rebuilds every repository and provider
+    on top of it.
+  - `notesProvider` is an empty list while signed out, so a reloading screen
+    can never show the previous user's notes. Settings reset per user.
+  - New user-specific providers must watch `currentUserIdProvider` (directly
+    or through the database) instead of assuming a signed-in user.
+  - Notes created before Phase 6 were in the shared `notevault` file and are
+    not migrated (pre-release data).
+
 ## Adding a feature
 
 1. Create `features/<name>/{domain,data,presentation}` with the subfolders above.

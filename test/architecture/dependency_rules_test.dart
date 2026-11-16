@@ -87,11 +87,18 @@ void main() {
       }
       if (p == null) continue;
       // Feature presentation may read the DI providers in lib/app/di (typed
-      // by domain abstractions); nothing else in a feature may touch app/.
-      final isDiProviders = imp.startsWith('lib/app/di/');
+      // by domain abstractions) and the route path constants; nothing else
+      // in a feature may touch app/.
+      final allowedFromPresentation =
+          imp.startsWith('lib/app/di/') ||
+          imp == 'lib/app/router/app_routes.dart';
       if (imp.startsWith('lib/app/') &&
-          !(isDiProviders && p.layer == 'presentation')) {
-        report(file, imp, 'features may only use app/di, from presentation');
+          !(allowedFromPresentation && p.layer == 'presentation')) {
+        report(
+          file,
+          imp,
+          'features may only use app/di and app_routes, from presentation',
+        );
       }
 
       switch (p.layer) {

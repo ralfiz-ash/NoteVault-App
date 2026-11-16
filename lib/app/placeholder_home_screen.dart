@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/auth/presentation/providers/auth_controller.dart';
 import '../features/auth/presentation/providers/auth_state_provider.dart';
+import '../features/auth/presentation/widgets/auth_error_snack_bar.dart';
 import '../features/auth/presentation/state/auth_state.dart';
 import '../features/notes/presentation/providers/notes_provider.dart';
 import '../features/settings/presentation/providers/settings_provider.dart';
@@ -28,13 +30,29 @@ class PlaceholderHomeScreen extends ConsumerWidget {
       );
     });
 
+    ref.listen(authControllerProvider, (_, next) {
+      if (next case AsyncError(:final error)) showAuthError(context, error);
+    });
+
     final auth = ref.watch(authStateProvider);
+    final signingOut = ref.watch(authControllerProvider).isLoading;
     final notes = ref.watch(notesProvider);
     final connection = ref.watch(connectionStatusProvider);
     final settings = ref.watch(settingsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('NoteVault')),
+      appBar: AppBar(
+        title: const Text('NoteVault'),
+        actions: [
+          IconButton(
+            tooltip: 'Sign out',
+            icon: const Icon(Icons.logout),
+            onPressed: signingOut
+                ? null
+                : () => ref.read(authControllerProvider.notifier).signOut(),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -44,7 +62,7 @@ class PlaceholderHomeScreen extends ConsumerWidget {
             label: 'Session',
             value: switch (auth) {
               AsyncData(value: Authenticated(:final user)) =>
-                'Signed in (${user.uid})',
+                'Signed in as ${user.email ?? user.displayName ?? user.uid}',
               AsyncData(value: Unauthenticated()) => 'Signed out',
               AsyncError() => 'Unavailable',
               _ => 'Checking…',

@@ -22,6 +22,7 @@ void main() {
     container = createContainer(
       overrides: [
         noteRepositoryProvider.overrideWithValue(repository),
+        signedInOverride(),
         idGeneratorProvider.overrideWithValue(SequenceIdGenerator()),
         clockProvider.overrideWithValue(() => fixedNow),
       ],
