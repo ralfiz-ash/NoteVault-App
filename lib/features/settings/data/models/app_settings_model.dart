@@ -7,11 +7,10 @@ class AppSettingsModel {
   final String themeMode;
   final String sortOrder;
 
-  factory AppSettingsModel.fromEntity(AppSettings settings) =>
-      AppSettingsModel(
-        themeMode: settings.themeMode.name,
-        sortOrder: settings.sortOrder.name,
-      );
+  factory AppSettingsModel.fromEntity(AppSettings settings) => AppSettingsModel(
+    themeMode: settings.themeMode.name,
+    sortOrder: settings.sortOrder.name,
+  );
 
   factory AppSettingsModel.fromMap(Map<String, dynamic> map) =>
       AppSettingsModel(
@@ -19,18 +18,20 @@ class AppSettingsModel {
         sortOrder: map['sortOrder'] as String? ?? '',
       );
 
-  Map<String, dynamic> toMap() =>
-      {'themeMode': themeMode, 'sortOrder': sortOrder};
+  Map<String, dynamic> toMap() => {
+    'themeMode': themeMode,
+    'sortOrder': sortOrder,
+  };
 
   /// Unknown or missing values fall back to the defaults.
   AppSettings toEntity() => AppSettings(
-        themeMode: ThemeModePreference.values.firstWhere(
-          (v) => v.name == themeMode,
-          orElse: () => ThemeModePreference.system,
-        ),
-        sortOrder: NoteSortOrder.values.firstWhere(
-          (v) => v.name == sortOrder,
-          orElse: () => NoteSortOrder.updatedNewest,
-        ),
-      );
+    themeMode: ThemeModePreference.values.firstWhere(
+      (v) => v.name == themeMode,
+      orElse: () => ThemeModePreference.system,
+    ),
+    sortOrder: NoteSortOrder.values.firstWhere(
+      (v) => v.name == sortOrder,
+      orElse: () => NoteSortOrder.updatedNewest,
+    ),
+  );
 }
