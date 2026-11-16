@@ -22,44 +22,42 @@ class NoteModel {
   final DateTime updatedAt;
 
   factory NoteModel.fromEntity(Note note) => NoteModel(
-        id: note.id,
-        title: note.title,
-        content: note.content,
-        folderId: note.folderId,
-        tags: note.tags,
-        createdAt: note.createdAt,
-        updatedAt: note.updatedAt,
-      );
+    id: note.id,
+    title: note.title,
+    content: note.content,
+    folderId: note.folderId,
+    tags: note.tags,
+    createdAt: note.createdAt,
+    updatedAt: note.updatedAt,
+  );
 
   factory NoteModel.fromMap(Map<String, dynamic> map) => NoteModel(
-        id: map['id'] as String,
-        title: map['title'] as String,
-        content: map['content'] as String,
-        folderId: map['folderId'] as String?,
-        tags: List<String>.from(map['tags'] as List? ?? const []),
-        createdAt:
-            DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-        updatedAt:
-            DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
-      );
+    id: map['id'] as String,
+    title: map['title'] as String,
+    content: map['content'] as String,
+    folderId: map['folderId'] as String?,
+    tags: List<String>.from(map['tags'] as List? ?? const []),
+    createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
+    updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
+  );
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'title': title,
-        'content': content,
-        'folderId': folderId,
-        'tags': tags,
-        'createdAt': createdAt.millisecondsSinceEpoch,
-        'updatedAt': updatedAt.millisecondsSinceEpoch,
-      };
+    'id': id,
+    'title': title,
+    'content': content,
+    'folderId': folderId,
+    'tags': tags,
+    'createdAt': createdAt.millisecondsSinceEpoch,
+    'updatedAt': updatedAt.millisecondsSinceEpoch,
+  };
 
   Note toEntity() => Note(
-        id: id,
-        title: title,
-        content: content,
-        folderId: folderId,
-        tags: tags,
-        createdAt: createdAt,
-        updatedAt: updatedAt,
-      );
+    id: id,
+    title: title,
+    content: content,
+    folderId: folderId,
+    tags: tags,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+  );
 }

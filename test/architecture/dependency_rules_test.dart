@@ -15,8 +15,10 @@ void main() {
       .where((f) => f.path.endsWith('.dart'))
       .toList();
 
-  final importPattern = RegExp(r'''^\s*(?:import|export)\s+['"]([^'"]+)['"]''',
-      multiLine: true);
+  final importPattern = RegExp(
+    r'''^\s*(?:import|export)\s+['"]([^'"]+)['"]''',
+    multiLine: true,
+  );
 
   /// Imports of [file] as normalized `lib/...` paths, or the raw
   /// `package:`/`dart:` URI for external ones.
@@ -78,12 +80,15 @@ void main() {
       final target = imp.startsWith('lib/') ? place(imp) : null;
 
       if (isCore) {
-        if (imp.startsWith('lib/features/')) {
-          report(file, imp, 'core must not depend on features');
+        if (imp.startsWith('lib/features/') || imp.startsWith('lib/app/')) {
+          report(file, imp, 'core must not depend on features or app');
         }
         continue;
       }
       if (p == null) continue;
+      if (imp.startsWith('lib/app/')) {
+        report(file, imp, 'features must not depend on app');
+      }
 
       switch (p.layer) {
         case 'domain':
@@ -113,10 +118,12 @@ void main() {
             if (target.layer == 'data') {
               report(file, imp, 'presentation must not import data');
             }
-            if (target.layer == 'presentation' &&
-                target.feature != p.feature) {
-              report(file, imp,
-                  'presentation must not import another feature\'s presentation');
+            if (target.layer == 'presentation' && target.feature != p.feature) {
+              report(
+                file,
+                imp,
+                'presentation must not import another feature\'s presentation',
+              );
             }
           }
       }
@@ -128,12 +135,17 @@ void main() {
   });
 
   test('every feature has data, domain and presentation layers', () {
-    final features = Directory('lib/features').listSync().whereType<Directory>();
+    final features = Directory('lib/features')
+        .listSync()
+        .whereType<Directory>();
     expect(features, isNotEmpty);
     for (final feature in features) {
       for (final layer in ['data', 'domain', 'presentation']) {
-        expect(Directory('${feature.path}/$layer').existsSync(), isTrue,
-            reason: '${feature.path} is missing $layer/');
+        expect(
+          Directory('${feature.path}/$layer').existsSync(),
+          isTrue,
+          reason: '${feature.path} is missing $layer/',
+        );
       }
     }
   });

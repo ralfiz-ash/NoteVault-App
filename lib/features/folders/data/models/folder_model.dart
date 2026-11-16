@@ -12,23 +12,22 @@ class FolderModel {
   final DateTime createdAt;
 
   factory FolderModel.fromEntity(Folder folder) => FolderModel(
-        id: folder.id,
-        name: folder.name,
-        createdAt: folder.createdAt,
-      );
+    id: folder.id,
+    name: folder.name,
+    createdAt: folder.createdAt,
+  );
 
   factory FolderModel.fromMap(Map<String, dynamic> map) => FolderModel(
-        id: map['id'] as String,
-        name: map['name'] as String,
-        createdAt:
-            DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-      );
+    id: map['id'] as String,
+    name: map['name'] as String,
+    createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
+  );
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'name': name,
-        'createdAt': createdAt.millisecondsSinceEpoch,
-      };
+    'id': id,
+    'name': name,
+    'createdAt': createdAt.millisecondsSinceEpoch,
+  };
 
   Folder toEntity() => Folder(id: id, name: name, createdAt: createdAt);
 }

@@ -16,23 +16,23 @@ class AppUserModel {
   final String? photoUrl;
 
   factory AppUserModel.fromMap(Map<String, dynamic> map) => AppUserModel(
-        uid: map['uid'] as String,
-        email: map['email'] as String,
-        displayName: map['displayName'] as String?,
-        photoUrl: map['photoUrl'] as String?,
-      );
+    uid: map['uid'] as String,
+    email: map['email'] as String,
+    displayName: map['displayName'] as String?,
+    photoUrl: map['photoUrl'] as String?,
+  );
 
   Map<String, dynamic> toMap() => {
-        'uid': uid,
-        'email': email,
-        'displayName': displayName,
-        'photoUrl': photoUrl,
-      };
+    'uid': uid,
+    'email': email,
+    'displayName': displayName,
+    'photoUrl': photoUrl,
+  };
 
   AppUser toEntity() => AppUser(
-        uid: uid,
-        email: email,
-        displayName: displayName,
-        photoUrl: photoUrl,
-      );
+    uid: uid,
+    email: email,
+    displayName: displayName,
+    photoUrl: photoUrl,
+  );
 }
