@@ -37,8 +37,14 @@ class NoteModel {
     content: map['content'] as String,
     folderId: map['folderId'] as String?,
     tags: List<String>.from(map['tags'] as List? ?? const []),
-    createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-    updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
+    createdAt: DateTime.fromMillisecondsSinceEpoch(
+      map['createdAt'] as int,
+      isUtc: true,
+    ),
+    updatedAt: DateTime.fromMillisecondsSinceEpoch(
+      map['updatedAt'] as int,
+      isUtc: true,
+    ),
   );
 
   Map<String, dynamic> toMap() => {

@@ -13,6 +13,8 @@ lib/
 │   └── router/                   go_router provider, route paths, error screen
 ├── core/                         shared, feature-agnostic code
 │   ├── config/app_config.dart    non-secret config (--dart-define APP_ENV)
+│   ├── database/                 Drift AppDatabase, tables, DB exception mapper
+│   ├── utils/                    Clock, IdGenerator
 │   ├── errors/                   sealed Failure, ExceptionMapper, guardFailures
 │   ├── logging/app_logger.dart   AppLogger, ConsoleLogger, redaction
 │   ├── usecase/usecase.dart      UseCase<Output, Input> base + NoParams
@@ -21,6 +23,7 @@ lib/
     ├── auth/        (user, sign-out, auth state)
     ├── notes/       (note, local-first note storage; search/filter later)
     ├── folders/     (folders)
+    ├── tags/        (tags)
     ├── settings/    (theme mode, note sort order)
     └── sync/        (connectivity now; pending-note upload later)
         ├── domain/
@@ -101,15 +104,72 @@ a wrong import fails `flutter test`.
   models are small, hand-written immutable classes. Revisit in the Local
   Database phase when DTO serialization grows.
 
-## Status of Phase 1 contracts
+## Local database (Phase 3)
 
-Structure, contracts and boundaries only. Nothing is functional yet:
-- Repository implementations throw `UnimplementedError` and name the phase
-  that will implement them.
-- No Firebase, database, connectivity plugin or Riverpod dependency has been
-  added; the `providers/`, `screens/`, `widgets/` and `state/` folders hold
-  `.gitkeep` placeholders.
-- Notes CRUD and authentication are not implemented.
+**Drift (SQLite)** is the local database: typed queries, relational integrity
+(notes, folders, tags), reactive streams, migrations, and in-memory databases
+for tests. It uses `build_runner`, which the project already has.
+
+```
+Presentation (later)
+      |
+Domain: Note / Folder / Tag + NoteRepository / FolderRepository / TagRepository
+      ^
+Data:  *RepositoryImpl  ->  *LocalDataSource (interface)  ->  Drift*LocalDataSource
+                                                                   |
+                                                         core/database/AppDatabase
+```
+
+- **Schema** (`lib/core/database/`): `notes`, `folders`, `tags` (unique, case
+  insensitive name) and `note_tags` (many-to-many). Dates are epoch
+  milliseconds; the data layer returns them as UTC. Deleting a folder keeps
+  its notes (`ON DELETE SET NULL`); deleting a note or tag removes its links
+  (`ON DELETE CASCADE`). Foreign keys are enabled per connection.
+- **Separation**: only `Drift*LocalDataSource` classes and `AppDatabase` know
+  about Drift. Data sources speak in `*Model` classes; repositories convert
+  models to domain entities. Domain and presentation may not import
+  `core/database/` (enforced by the architecture test).
+- **Failures**: repositories wrap data source calls in `guardFailures` /
+  `guardFailureStream`. Missing records become `NotFoundFailure`; anything the
+  database throws becomes `LocalDatabaseFailure`.
+- **Timestamps**: `updateNote` keeps the stored id and `createdAt` and sets
+  `updatedAt` from the injected `Clock`.
+- **Ids**: generated on the device (`IdGenerator`, UUID v4) so records can be
+  created offline without clashes.
+- **Dependency injection**: `lib/app/di/database_providers.dart` and
+  `repository_providers.dart` build `appDatabase -> data source -> repository`.
+  Override any link in tests (`appDatabaseProvider.overrideWithValue(...)`).
+- **Tests** use `NativeDatabase.memory()` (`test/helpers/test_database.dart`),
+  never the real database file.
+- **Platforms**: Android, iOS and Web, all through the same Drift code.
+  - Android / iOS: a SQLite file in the app's documents directory.
+  - Web: SQLite compiled to WebAssembly (shared worker + IndexedDB, or OPFS
+    when the browser allows). It needs two files in `web/`:
+    `sqlite3.wasm` and `drift_worker.js`. Both are committed and produced by
+    `bash tool/build_web_db_assets.sh` (the worker is compiled from
+    `tool/drift_worker.dart` against the locked drift version; the wasm is
+    copied from the drift package). `sqlite3` is a direct dependency purely so
+    its version stays in step with `web/sqlite3.wasm`: a mismatched wasm fails
+    at runtime with a `LinkError`. After upgrading `drift` or `sqlite3`, re-run
+    the script and test on a real browser.
+- **Tags are independent entities.** A tag is created the first time a note
+  uses it and then stays available. Removing a tag from a note, or deleting a
+  note, never deletes the tag, and there is intentionally no automatic orphan
+  cleanup. A tag is removed only by an explicit `TagRepository.deleteTag`,
+  which also unlinks it from every note. (Creating a tag without attaching it
+  to a note is not exposed yet; that belongs to the tag-management phase.)
+- **Dates are UTC.** Timestamps are stored as epoch milliseconds, and the data
+  layer always returns UTC `DateTime`s to the domain. The domain never converts
+  to local time. The presentation layer converts for display only, with
+  `dateTime.toLocal()` before formatting (to be done in the notes UI phase).
+
+### Prepared for sync (not implemented)
+
+Stable client-generated ids, `createdAt`/`updatedAt` on every note, and the
+folder/tag relations already exist. Sync metadata (for example a sync state or
+deletion marker) is deliberately **not** in the schema yet: it will be added by
+a Drift migration (`schemaVersion` 2) in the sync phases, once the design is
+known.
 
 ## Adding a feature
 
