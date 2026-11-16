@@ -15,6 +15,9 @@ FlutterFire approach.
 | Cloud Firestore | `(default)` database, Native mode, location `nam5` (permanent) |
 | Security rules | `firestore.rules` deployed: owner-only `users/{uid}/notes/{noteId}`, everything else denied |
 | CLI project link | `.firebaserc` (default project) and `firebase.json` |
+| Google sign-in config | Google provider enabled in the console; OAuth clients in `google-services.json` / `GoogleService-Info.plist` |
+| Android fingerprints | Debug keystore of the main dev machine (SHA-1 `DF:8E:81:99:…:3E`, SHA-256 `17:40:F5:77:…:2B`) |
+| iOS Google sign-in | `GIDClientID` and the `REVERSED_CLIENT_ID` URL scheme in `ios/Runner/Info.plist` |
 
 To regenerate the config after changes in the console (for example after
 enabling Google sign-in or adding SHA fingerprints):
@@ -32,6 +35,8 @@ firebase deploy --only firestore:rules
 ## Manual steps still required (Firebase console)
 
 These need a person in the Firebase console; the CLI cannot do them.
+Steps 3 (debug fingerprints only), 4 and 5 are done; the rest stay here as the
+reference for new machines, release keys and new environments.
 
 1. **Enable Authentication.** Console -> Build -> Authentication -> Get
    started. Until then every auth call fails with `CONFIGURATION_NOT_FOUND`
@@ -47,7 +52,12 @@ These need a person in the Firebase console; the CLI cannot do them.
    keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
    ```
 
-   Add the release/Play signing fingerprints too before shipping.
+   Add the release/Play signing fingerprints too before shipping, and the
+   debug fingerprints of every other developer machine. From the CLI:
+
+   ```bash
+   firebase apps:android:sha:create 1:979111282775:android:4d7b5ca57604e883027b12 <SHA> --project notevault-e0ea6
+   ```
 4. **Re-run `flutterfire configure`** (command above) after steps 2-3, so
    `google-services.json` and `GoogleService-Info.plist` contain the new OAuth
    clients.
