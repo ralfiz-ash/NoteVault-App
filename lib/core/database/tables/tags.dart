@@ -8,6 +8,11 @@ class Tags extends Table {
   TextColumn get name =>
       text().customConstraint('NOT NULL UNIQUE COLLATE NOCASE')();
 
+  /// Colour as "#RRGGBB" (added in schema version 2). Tags created before
+  /// that, or without a chosen colour, get the default. Must match
+  /// `TagColors.defaultValue` in the tags domain.
+  TextColumn get color => text().withDefault(const Constant('#BDB76B'))();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }

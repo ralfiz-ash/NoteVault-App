@@ -267,17 +267,72 @@ class FakeFolderRepository implements FolderRepository {
   }
 }
 
+/// In-memory tags with the real rules (unique names ignoring case),
+/// replaying the current list to new listeners.
 class FakeTagRepository implements TagRepository {
-  FakeTagRepository([this._tags = const []]);
+  FakeTagRepository([List<Tag> initial = const []]) {
+    for (final t in initial) {
+      _tags[t.id] = t;
+    }
+  }
 
-  final List<Tag> _tags;
+  final Map<String, Tag> _tags = {};
+  final _changes = StreamController<void>.broadcast();
+
+  /// If set, the next mutation throws it.
+  Failure? nextError;
+
+  List<Tag> get _sorted =>
+      _tags.values.toList()
+        ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+
+  void _throwIfQueued() {
+    final error = nextError;
+    if (error != null) {
+      nextError = null;
+      throw error;
+    }
+  }
+
+  void _ensureFree(Tag tag) {
+    final clash = _tags.values.any(
+      (t) => t.id != tag.id && t.name.toLowerCase() == tag.name.toLowerCase(),
+    );
+    if (clash) throw const ValidationFailure(message: 'Tag exists');
+  }
 
   @override
-  Stream<List<Tag>> watchTags() => Stream.value(_tags);
+  Stream<List<Tag>> watchTags() async* {
+    yield _sorted;
+    yield* _changes.stream.map((_) => _sorted);
+  }
 
   @override
-  Future<List<Tag>> getTags() async => _tags;
+  Future<List<Tag>> getTags() async => _sorted;
 
   @override
-  Future<void> deleteTag(String id) async {}
+  Future<Tag> createTag(Tag tag) async {
+    _throwIfQueued();
+    _ensureFree(tag);
+    _tags[tag.id] = tag;
+    _changes.add(null);
+    return tag;
+  }
+
+  @override
+  Future<Tag> updateTag(Tag tag) async {
+    _throwIfQueued();
+    if (!_tags.containsKey(tag.id)) throw NotFoundFailure(cause: tag.id);
+    _ensureFree(tag);
+    _tags[tag.id] = tag;
+    _changes.add(null);
+    return tag;
+  }
+
+  @override
+  Future<void> deleteTag(String id) async {
+    _throwIfQueued();
+    if (_tags.remove(id) == null) throw NotFoundFailure(cause: id);
+    _changes.add(null);
+  }
 }

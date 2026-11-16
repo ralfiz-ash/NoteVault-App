@@ -8,6 +8,8 @@ import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/folder.dart';
 import '../../domain/usecases/create_folder.dart';
 import '../../domain/usecases/observe_folders.dart';
+import '../../domain/usecases/rename_folder.dart';
+import '../../../notes/presentation/providers/notes_provider.dart';
 
 part 'folders_provider.g.dart';
 
@@ -38,3 +40,55 @@ CreateFolder createFolder(Ref ref) => CreateFolder(
   ref.watch(idGeneratorProvider),
   ref.watch(clockProvider),
 );
+
+@riverpod
+RenameFolder renameFolder(Ref ref) =>
+    RenameFolder(ref.watch(folderRepositoryProvider));
+
+@riverpod
+DeleteFolder deleteFolder(Ref ref) =>
+    DeleteFolder(ref.watch(folderRepositoryProvider));
+
+/// Number of notes per folder id; the `null` key counts notes in no folder.
+/// Computed in one pass over the notes already in memory (no query per
+/// folder), so it changes whenever a note is created, moved or deleted, or a
+/// folder is deleted.
+@riverpod
+Map<String?, int> folderNoteCounts(Ref ref) {
+  final counts = <String?, int>{};
+  for (final note in ref.watch(notesProvider).value ?? const []) {
+    counts[note.folderId] = (counts[note.folderId] ?? 0) + 1;
+  }
+  return counts;
+}
+
+/// Create / rename / delete folders from the folders screen. State:
+/// `AsyncData(null)` idle or done, `AsyncLoading`, `AsyncError(Failure)`.
+@riverpod
+class FolderActions extends _$FolderActions {
+  @override
+  FutureOr<void> build() {}
+
+  Future<Folder?> create(String name) =>
+      _run(() => ref.read(createFolderProvider)(name));
+
+  Future<Folder?> rename(Folder folder, String name) =>
+      _run(() => ref.read(renameFolderProvider)(folder.copyWith(name: name)));
+
+  Future<bool> delete(String id) async =>
+      await _run<bool>(() async {
+        await ref.read(deleteFolderProvider)(id);
+        return true;
+      }) ??
+      false;
+
+  Future<T?> _run<T>(Future<T> Function() action) async {
+    state = const AsyncLoading();
+    T? value;
+    final result = await AsyncValue.guard(() async {
+      value = await action();
+    });
+    if (ref.mounted) state = result;
+    return result.hasError ? null : value;
+  }
+}

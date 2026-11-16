@@ -2,6 +2,9 @@
 abstract final class AppRoutes {
   static const home = '/';
 
+  static const folders = '/folders';
+  static const tags = '/tags';
+
   static const newNote = '/notes/new';
   static String note(String id) => '/notes/$id';
   static String editNote(String id) => '/notes/$id/edit';

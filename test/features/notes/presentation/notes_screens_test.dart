@@ -93,7 +93,7 @@ void main() {
       expect(find.text('Groceries'), findsOneWidget);
       expect(find.text('Milk and eggs'), findsOneWidget);
       expect(find.text('Work'), findsOneWidget);
-      expect(find.text('#home'), findsOneWidget);
+      expect(find.text('home'), findsOneWidget);
       expect(find.textContaining('Edited '), findsOneWidget);
     });
 
@@ -146,8 +146,8 @@ void main() {
       expect(find.text('Plan'), findsOneWidget);
       expect(find.text('Write the spec'), findsOneWidget);
       expect(find.text('Work'), findsOneWidget);
-      expect(find.text('#urgent'), findsOneWidget);
-      expect(find.text('#existing'), findsOneWidget);
+      expect(find.text('urgent'), findsOneWidget);
+      expect(find.text('existing'), findsOneWidget);
 
       await tester.pageBack();
       await tester.pumpAndSettle();
@@ -184,7 +184,7 @@ void main() {
       expect(find.text('Groceries'), findsOneWidget);
       expect(find.text('Milk and eggs'), findsOneWidget);
       expect(find.text('Work'), findsOneWidget);
-      expect(find.text('#home'), findsOneWidget);
+      expect(find.text('home'), findsOneWidget);
       expect(find.textContaining('Created '), findsOneWidget);
       expect(find.textContaining('Edited '), findsOneWidget);
     });
