@@ -1,0 +1,43 @@
+rules_version = '2';
+
+// NoteVault Firestore security rules.
+//
+// Ownership model: every note lives under the signed-in user's own path,
+//   /users/{userId}/notes/{noteId}
+// and only that user can read or write it. Everything else is denied.
+//
+// Assumption: users sign in with Firebase Authentication (email/password or
+// Google), so request.auth.uid is the owner id. Folder and tag documents will
+// get their own match blocks when they are synced (later phases).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function isValidNote(noteId) {
+      let note = request.resource.data;
+      return note.keys().hasOnly(
+               ['id', 'title', 'content', 'folderId', 'tags', 'createdAt', 'updatedAt'])
+          && note.keys().hasAll(['id', 'title', 'content', 'tags', 'createdAt', 'updatedAt'])
+          && note.id == noteId
+          && note.title is string && note.title.size() <= 1000
+          && note.content is string && note.content.size() <= 900000
+          && (!('folderId' in note) || note.folderId == null || note.folderId is string)
+          && note.tags is list && note.tags.size() <= 100
+          && note.createdAt is timestamp
+          && note.updatedAt is timestamp;
+    }
+
+    match /users/{userId}/notes/{noteId} {
+      allow read, delete: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidNote(noteId);
+    }
+
+    // Deny anything not matched above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

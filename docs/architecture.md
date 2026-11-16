@@ -171,6 +171,45 @@ deletion marker) is deliberately **not** in the schema yet: it will be added by
 a Drift migration (`schemaVersion` 2) in the sync phases, once the design is
 known.
 
+## Firebase foundation (Phase 4)
+
+Firebase is infrastructure: only the data layer, `core/firebase/` and the
+composition root (`lib/app/`) import Firebase or Google Sign-In packages.
+Domain and presentation may not (enforced by the architecture test).
+Console setup and remaining manual steps: `docs/firebase-setup.md`.
+
+```
+Domain:  AuthRepository                     NoteRemoteRepository
+            ^                                  ^
+Data:    AuthRepositoryImpl                 NoteRemoteRepositoryImpl
+            |  AuthExceptionMapper             |  FirestoreExceptionMapper
+         AuthRemoteDataSource               NoteRemoteDataSource
+            |                                  |
+         FirebaseAuthRemoteDataSource       FirestoreNoteRemoteDataSource
+         (FirebaseAuth + GoogleIdTokenSource)  (FirebaseFirestore)
+```
+
+- **Initialisation**: `bootstrap()` calls `FirebaseInitializer.initialize()`
+  once, before `runApp`, using `lib/firebase_options.dart`. A failure is
+  logged and the app still starts (notes are local-first).
+- **Auth**: email/password sign-in and registration, password reset email,
+  Google sign-in and sign-out, current user and auth state stream. Firebase
+  `User` is mapped to `AppUserModel` and then to the domain `AppUser`. Google
+  sign-in uses the native account picker on Android/iOS (ID token exchanged
+  for a Firebase credential) and Firebase's popup on the web. No auth UI yet.
+- **Remote notes**: `users/{uid}/notes/{noteId}` documents with the same fields
+  as the local note; dates are Firestore `Timestamp`s in the document and UTC
+  `DateTime`s everywhere else (`NoteFirestoreMapper`). Values are stored
+  exactly as given. Not connected to the local database: no sync yet.
+- **Errors**: `AuthExceptionMapper` (Firebase Auth + Google Sign-In) and
+  `FirestoreExceptionMapper` turn SDK exceptions into the existing `Failure`
+  types; a new `CancelledFailure` covers a user closing a sign-in flow.
+- **DI**: `lib/app/di/firebase_providers.dart` exposes the SDK instances,
+  data sources, mappers and repositories (typed by their abstractions).
+- **Security rules**: `firestore.rules`, owner-only notes, deny by default.
+- **Tests** use fakes (`test/helpers/fake_firebase_auth.dart`,
+  `fake_cloud_firestore`), never the live project.
+
 ## Adding a feature
 
 1. Create `features/<name>/{domain,data,presentation}` with the subfolders above.
