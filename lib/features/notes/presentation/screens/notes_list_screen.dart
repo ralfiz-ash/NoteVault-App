@@ -11,7 +11,10 @@ import '../../../folders/presentation/providers/folders_provider.dart';
 import '../../domain/entities/note.dart';
 import '../providers/delete_note_controller.dart';
 import '../providers/notes_provider.dart';
-import '../providers/visible_notes_provider.dart';
+import '../../../tags/presentation/providers/tags_provider.dart';
+import '../providers/notes_filter_provider.dart';
+import '../state/notes_filter.dart';
+import '../widgets/notes_drawer.dart';
 import '../widgets/note_card.dart';
 
 class NotesListScreen extends ConsumerWidget {
@@ -41,12 +44,27 @@ class NotesListScreen extends ConsumerWidget {
       }
     });
 
-    final notes = ref.watch(visibleNotesProvider);
+    final notes = ref.watch(filteredNotesProvider);
+    final filter = ref.watch(notesFilterControllerProvider);
     final folderNames = ref.watch(folderNamesProvider);
+    final title = switch (filter) {
+      AllNotes() => 'Notes',
+      FolderFilter(folderId: null) => 'No folder',
+      FolderFilter(:final folderId) => folderNames[folderId] ?? 'Folder',
+      TagFilter(:final tagId) =>
+        ref
+                .watch(tagsProvider)
+                .value
+                ?.where((t) => t.id == tagId)
+                .map((t) => '#${t.name}')
+                .firstOrNull ??
+            'Tag',
+    };
 
     return Scaffold(
+      drawer: const NotesDrawer(),
       appBar: AppBar(
-        title: const Text('Notes'),
+        title: Text(title),
         actions: [
           IconButton(
             tooltip: 'Sign out',
@@ -66,7 +84,12 @@ class NotesListScreen extends ConsumerWidget {
           error: error,
           onRetry: () => ref.invalidate(notesProvider),
         ),
-        AsyncValue(:final value?) when value.isEmpty => const _EmptyView(),
+        AsyncValue(:final value?) when value.isEmpty => _EmptyView(
+          filtered: filter is! AllNotes,
+          onShowAll: () => ref
+              .read(notesFilterControllerProvider.notifier)
+              .show(const AllNotes()),
+        ),
         AsyncValue(:final value?) => ListView.builder(
           padding: const EdgeInsets.only(top: 8, bottom: 96),
           itemCount: value.length,
@@ -95,7 +118,10 @@ class NotesListScreen extends ConsumerWidget {
 }
 
 class _EmptyView extends StatelessWidget {
-  const _EmptyView();
+  const _EmptyView({required this.filtered, required this.onShowAll});
+
+  final bool filtered;
+  final VoidCallback onShowAll;
 
   @override
   Widget build(BuildContext context) {
@@ -112,15 +138,27 @@ class _EmptyView extends StatelessWidget {
               color: theme.colorScheme.primary,
             ),
             const SizedBox(height: 16),
-            Text('No notes yet', style: theme.textTheme.titleLarge),
+            Text(
+              filtered ? 'No notes here' : 'No notes yet',
+              style: theme.textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             Text(
-              'Tap "New note" to write your first one.',
+              filtered
+                  ? 'No notes match this folder or tag.'
+                  : 'Tap "New note" to write your first one.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
+            if (filtered) ...[
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: onShowAll,
+                child: const Text('Show all notes'),
+              ),
+            ],
           ],
         ),
       ),

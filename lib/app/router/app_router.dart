@@ -7,9 +7,11 @@ import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/state/auth_state.dart';
+import '../../features/folders/presentation/screens/folders_screen.dart';
 import '../../features/notes/presentation/screens/note_editor_screen.dart';
 import '../../features/notes/presentation/screens/note_view_screen.dart';
 import '../../features/notes/presentation/screens/notes_list_screen.dart';
+import '../../features/tags/presentation/screens/tags_screen.dart';
 import '../splash_screen.dart';
 import 'app_routes.dart';
 import 'auth_redirect.dart';
@@ -38,6 +40,14 @@ GoRouter appRouter(Ref ref) {
         path: AppRoutes.home,
         builder: (context, state) => const NotesListScreen(),
         routes: [
+          GoRoute(
+            path: 'folders',
+            builder: (context, state) => const FoldersScreen(),
+          ),
+          GoRoute(
+            path: 'tags',
+            builder: (context, state) => const TagsScreen(),
+          ),
           // Declared before 'notes/:id' so "new" is not taken as an id.
           GoRoute(
             path: 'notes/new',

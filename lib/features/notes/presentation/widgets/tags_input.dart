@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/presentation/tag_chip.dart';
+import '../../../tags/domain/entities/tag_colors.dart';
 import '../../../tags/presentation/providers/tags_provider.dart';
 import '../../domain/validation/note_validators.dart';
 
@@ -56,11 +58,12 @@ class _TagsInputState extends ConsumerState<TagsInput> {
   @override
   Widget build(BuildContext context) {
     final query = _controller.text.trim().toLowerCase();
+    final byName = ref.watch(tagsByNameProvider);
     final suggestions = [
-      for (final tag in ref.watch(tagsProvider).value ?? const [])
+      for (final tag in byName.values)
         if (!_has(tag.name) &&
             (query.isEmpty || tag.name.toLowerCase().contains(query)))
-          tag.name,
+          tag,
     ].take(8).toList();
 
     return Column(
@@ -94,10 +97,13 @@ class _TagsInputState extends ConsumerState<TagsInput> {
             runSpacing: 6,
             children: [
               for (final tag in widget.tags)
-                InputChip(
-                  label: Text(tag),
+                TagChip(
+                  label: tag,
+                  // New names get the default colour until edited.
+                  colorValue:
+                      byName[tag.toLowerCase()]?.colorValue ??
+                      TagColors.defaultValue,
                   onDeleted: widget.enabled ? () => _remove(tag) : null,
-                  deleteButtonTooltipMessage: 'Remove $tag',
                 ),
             ],
           ),
@@ -108,11 +114,12 @@ class _TagsInputState extends ConsumerState<TagsInput> {
             spacing: 6,
             runSpacing: 6,
             children: [
-              for (final name in suggestions)
-                ActionChip(
-                  avatar: const Icon(Icons.add, size: 16),
-                  label: Text(name),
-                  onPressed: () => _add(name),
+              for (final tag in suggestions)
+                TagChip(
+                  label: tag.name,
+                  colorValue: tag.colorValue,
+                  leadingIcon: Icons.add,
+                  onTap: () => _add(tag.name),
                 ),
             ],
           ),

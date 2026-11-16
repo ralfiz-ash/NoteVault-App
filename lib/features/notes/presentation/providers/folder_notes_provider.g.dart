@@ -8,37 +8,34 @@ part of 'folder_notes_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Notes in one folder, in the same order as [notesProvider].
-///
-/// Derived (filtered) from [notesProvider], so it reacts to every change
-/// without duplicating note data. One cached instance per folder id,
-/// auto-disposed when no longer used.
+/// Notes in one folder ([folderId] == null: notes in no folder), in list
+/// order. Filtered from [visibleNotesProvider] (no extra query, and notes
+/// being deleted are already hidden), so it updates on every change. One
+/// instance per folder id, auto-disposed when unused.
 
 @ProviderFor(folderNotes)
 final folderNotesProvider = FolderNotesFamily._();
 
-/// Notes in one folder, in the same order as [notesProvider].
-///
-/// Derived (filtered) from [notesProvider], so it reacts to every change
-/// without duplicating note data. One cached instance per folder id,
-/// auto-disposed when no longer used.
+/// Notes in one folder ([folderId] == null: notes in no folder), in list
+/// order. Filtered from [visibleNotesProvider] (no extra query, and notes
+/// being deleted are already hidden), so it updates on every change. One
+/// instance per folder id, auto-disposed when unused.
 
 final class FolderNotesProvider
     extends
         $FunctionalProvider<
           AsyncValue<List<Note>>,
-          List<Note>,
-          FutureOr<List<Note>>
+          AsyncValue<List<Note>>,
+          AsyncValue<List<Note>>
         >
-    with $FutureModifier<List<Note>>, $FutureProvider<List<Note>> {
-  /// Notes in one folder, in the same order as [notesProvider].
-  ///
-  /// Derived (filtered) from [notesProvider], so it reacts to every change
-  /// without duplicating note data. One cached instance per folder id,
-  /// auto-disposed when no longer used.
+    with $Provider<AsyncValue<List<Note>>> {
+  /// Notes in one folder ([folderId] == null: notes in no folder), in list
+  /// order. Filtered from [visibleNotesProvider] (no extra query, and notes
+  /// being deleted are already hidden), so it updates on every change. One
+  /// instance per folder id, auto-disposed when unused.
   FolderNotesProvider._({
     required FolderNotesFamily super.from,
-    required String super.argument,
+    required String? super.argument,
   }) : super(
          retry: null,
          name: r'folderNotesProvider',
@@ -59,13 +56,22 @@ final class FolderNotesProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<Note>> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $ProviderElement<AsyncValue<List<Note>>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
-  FutureOr<List<Note>> create(Ref ref) {
-    final argument = this.argument as String;
+  AsyncValue<List<Note>> create(Ref ref) {
+    final argument = this.argument as String?;
     return folderNotes(ref, argument);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AsyncValue<List<Note>> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AsyncValue<List<Note>>>(value),
+    );
   }
 
   @override
@@ -79,16 +85,15 @@ final class FolderNotesProvider
   }
 }
 
-String _$folderNotesHash() => r'3d614159130bfd8e4e9e4f58ef48c84a811dba1f';
+String _$folderNotesHash() => r'8e5be6992668fbd6633d73267f2c8f8407d26eba';
 
-/// Notes in one folder, in the same order as [notesProvider].
-///
-/// Derived (filtered) from [notesProvider], so it reacts to every change
-/// without duplicating note data. One cached instance per folder id,
-/// auto-disposed when no longer used.
+/// Notes in one folder ([folderId] == null: notes in no folder), in list
+/// order. Filtered from [visibleNotesProvider] (no extra query, and notes
+/// being deleted are already hidden), so it updates on every change. One
+/// instance per folder id, auto-disposed when unused.
 
 final class FolderNotesFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<List<Note>>, String> {
+    with $FunctionalFamilyOverride<AsyncValue<List<Note>>, String?> {
   FolderNotesFamily._()
     : super(
         retry: null,
@@ -98,13 +103,12 @@ final class FolderNotesFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Notes in one folder, in the same order as [notesProvider].
-  ///
-  /// Derived (filtered) from [notesProvider], so it reacts to every change
-  /// without duplicating note data. One cached instance per folder id,
-  /// auto-disposed when no longer used.
+  /// Notes in one folder ([folderId] == null: notes in no folder), in list
+  /// order. Filtered from [visibleNotesProvider] (no extra query, and notes
+  /// being deleted are already hidden), so it updates on every change. One
+  /// instance per folder id, auto-disposed when unused.
 
-  FolderNotesProvider call(String folderId) =>
+  FolderNotesProvider call(String? folderId) =>
       FolderNotesProvider._(argument: folderId, from: this);
 
   @override

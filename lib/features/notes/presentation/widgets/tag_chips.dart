@@ -1,35 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Read-only tags, e.g. on note cards and the note screen.
-class TagChips extends StatelessWidget {
-  const TagChips({required this.tags, this.dense = false, super.key});
+import '../../../../core/presentation/tag_chip.dart';
+import '../../../tags/domain/entities/tag_colors.dart';
+import '../../../tags/presentation/providers/tags_provider.dart';
+
+/// A note's tags, each in its own colour (looked up from the tags list, the
+/// single source of tag colours). [onRemove] adds a remove button.
+class TagChips extends ConsumerWidget {
+  const TagChips({
+    required this.tags,
+    this.dense = false,
+    this.onRemove,
+    super.key,
+  });
 
   final List<String> tags;
   final bool dense;
+  final ValueChanged<String>? onRemove;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final byName = ref.watch(tagsByNameProvider);
     return Wrap(
       spacing: 6,
       runSpacing: 6,
       children: [
-        for (final tag in tags)
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: dense ? 8 : 10,
-              vertical: dense ? 2 : 4,
-            ),
-            decoration: BoxDecoration(
-              color: colors.secondary.withValues(alpha: 0.25),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              '#$tag',
-              style: dense
-                  ? Theme.of(context).textTheme.labelSmall
-                  : Theme.of(context).textTheme.labelMedium,
-            ),
+        for (final name in tags)
+          TagChip(
+            label: byName[name.toLowerCase()]?.name ?? name,
+            colorValue:
+                byName[name.toLowerCase()]?.colorValue ??
+                TagColors.defaultValue,
+            dense: dense,
+            onDeleted: onRemove == null ? null : () => onRemove!(name),
           ),
       ],
     );

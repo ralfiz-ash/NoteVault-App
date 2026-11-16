@@ -337,6 +337,35 @@ Delete (list/view) - DeleteNoteController + PendingNoteDeletions (optimistic)
 - **Offline**: notes CRUD only touches the local database; Firestore is not
   used (sync comes later).
 
+## Folders, tags and tag colours (Phase 8)
+
+- **Folders**: create, rename and delete from the Folders screen (drawer ->
+  Folders -> edit); assign in the note editor. Deleting a folder keeps its
+  notes: one `UPDATE notes SET folder_id = NULL` (no per-note writes, note
+  dates untouched), then the folder row is deleted, in one transaction.
+- **Tags**: independent entities, unique by name ignoring case. Created on
+  the Tags screen (name + colour) or implicitly when a note uses a new name
+  (default colour). Add/remove on the note screen (`AddTagToNote`,
+  `RemoveTagFromNote`) or in the editor. Removing from a note only unlinks.
+  Deleting a tag unlinks it from all notes (explicit statement, so watchers
+  refresh) and keeps the notes.
+- **Tag colours**: stored as `"#RRGGBB"` (`Tag.colorValue`, column
+  `tags.color`, schema version 2 with a migration that gives existing tags
+  the default). `TagColors` (domain) holds the palette, validation and the
+  default; invalid stored values show as the default. Only
+  `core/presentation/tag_chip.dart` turns the string into a Flutter `Color`.
+  `tagsProvider` is the single source; chips look colours up by name
+  (`tagsByNameProvider`), so a colour change shows everywhere at once.
+- **Filtering and counts** (all derived from the notes already in memory; no
+  query per folder or tag):
+  - `folderNotesProvider(folderId)` (`null` = no folder) and
+    `tagNotesProvider(tagId)`: one auto-disposed instance per id.
+  - `filteredNotesProvider` picks one of them from the list's
+    `NotesFilterController` (all / folder / no folder / tag), set from the
+    drawer.
+  - `folderNoteCountsProvider` and `tagNoteCountsProvider`: one pass over the
+    notes.
+
 ## Adding a feature
 
 1. Create `features/<name>/{domain,data,presentation}` with the subfolders above.

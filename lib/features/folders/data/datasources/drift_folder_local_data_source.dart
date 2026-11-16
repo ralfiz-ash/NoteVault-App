@@ -44,12 +44,20 @@ class DriftFolderLocalDataSource implements FolderLocalDataSource {
   }
 
   @override
-  Future<bool> deleteFolder(String id) async {
-    // notes.folder_id is ON DELETE SET NULL.
-    final removed = await (_db.delete(
-      _db.folders,
-    )..where((t) => t.id.equals(id))).go();
-    return removed > 0;
+  Future<bool> deleteFolder(String id) {
+    return _db.transaction(() async {
+      // Notes are kept and become folder-less: one UPDATE for all of them
+      // (no per-note writes; updatedAt and everything else untouched). Done
+      // explicitly so note watchers refresh (ON DELETE SET NULL would change
+      // the rows without notifying them).
+      await (_db.update(_db.notes)..where((n) => n.folderId.equals(id))).write(
+        const NotesCompanion(folderId: Value(null)),
+      );
+      final removed = await (_db.delete(
+        _db.folders,
+      )..where((t) => t.id.equals(id))).go();
+      return removed > 0;
+    });
   }
 
   FolderModel _toModel(FolderRow row) => FolderModel(

@@ -1,11 +1,12 @@
 import '../../../../core/errors/failure.dart';
+import '../../../tags/domain/validation/tag_validators.dart';
 import '../entities/note_draft.dart';
 
 /// Rules for note input, shared by the editor (field messages) and the use
 /// cases (safety net). Each method returns a message, or `null` when valid.
 abstract final class NoteValidators {
   static const maxTitleLength = 200;
-  static const maxTagLength = 40;
+  static const maxTagLength = TagValidators.maxNameLength;
   static const maxTags = 20;
 
   static String? title(String? value) {
@@ -17,15 +18,9 @@ abstract final class NoteValidators {
     return null;
   }
 
-  /// A single tag being added. Content may be empty, so it has no rule.
-  static String? tag(String? value) {
-    final tag = value?.trim() ?? '';
-    if (tag.isEmpty) return 'Tag cannot be empty';
-    if (tag.length > maxTagLength) {
-      return 'Tags must be at most $maxTagLength characters';
-    }
-    return null;
-  }
+  /// A single tag being added (same rule as the tags feature). Content may
+  /// be empty, so it has no rule.
+  static String? tag(String? value) => TagValidators.name(value);
 
   static String? tagCount(List<String> tags) =>
       tags.length > maxTags ? 'A note can have at most $maxTags tags' : null;

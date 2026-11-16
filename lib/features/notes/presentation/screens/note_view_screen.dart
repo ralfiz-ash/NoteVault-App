@@ -11,7 +11,10 @@ import '../../../../core/presentation/date_formatting.dart';
 import '../../../folders/presentation/providers/folders_provider.dart';
 import '../../domain/entities/note.dart';
 import '../providers/delete_note_controller.dart';
+import '../../../../core/presentation/failure_snack_bar.dart';
 import '../providers/note_provider.dart';
+import '../providers/note_tag_actions_provider.dart';
+import '../widgets/add_tag_dialog.dart';
 import '../widgets/folder_label.dart';
 import '../widgets/tag_chips.dart';
 
@@ -39,6 +42,11 @@ class NoteViewScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(noteTagActionsProvider, (_, next) {
+      if (next case AsyncError(:final error)) {
+        showFailureSnackBar(context, 'Unable to update tags', error);
+      }
+    });
     final note = ref.watch(noteProvider(noteId));
 
     return Scaffold(
@@ -93,10 +101,34 @@ class _NoteDetails extends ConsumerWidget {
           FolderLabel(name: folderName),
           const SizedBox(height: 8),
         ],
-        if (note.tags.isNotEmpty) ...[
-          TagChips(tags: note.tags),
-          const SizedBox(height: 8),
-        ],
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            TagChips(
+              tags: note.tags,
+              // Removes only the link; the tag stays available.
+              onRemove: (tag) => ref
+                  .read(noteTagActionsProvider.notifier)
+                  .remove(note.id, tag),
+            ),
+            ActionChip(
+              avatar: const Icon(Icons.add, size: 16),
+              label: const Text('Tag'),
+              tooltip: 'Add tag',
+              onPressed: () async {
+                final name = await showAddTagDialog(context, note.tags);
+                if (name != null) {
+                  await ref
+                      .read(noteTagActionsProvider.notifier)
+                      .add(note.id, name);
+                }
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
         Text('Created ${formatDateTime(context, note.createdAt)}', style: meta),
         Text('Edited ${formatDateTime(context, note.updatedAt)}', style: meta),
         const Divider(height: 32),
