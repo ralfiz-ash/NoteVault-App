@@ -63,13 +63,14 @@ class DefaultFirebaseOptions {
     projectId: 'notevault-e0ea6',
     storageBucket: 'notevault-e0ea6.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCzMin3oC5EjXo4Ty_vHkTdgSALzCPaUw0',
     appId: '1:979111282775:ios:9efb93461abfce43027b12',
     messagingSenderId: '979111282775',
     projectId: 'notevault-e0ea6',
     storageBucket: 'notevault-e0ea6.firebasestorage.app',
+    androidClientId: '979111282775-h4kcjnngopaf3k5pks00sc0i89t0p2b6.apps.googleusercontent.com',
+    iosClientId: '979111282775-v4u20nkbnd9v2scaj60i0m1o96tdd148.apps.googleusercontent.com',
     iosBundleId: 'com.ashiq.notevalult',
   );
 }
