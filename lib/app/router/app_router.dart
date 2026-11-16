@@ -7,7 +7,9 @@ import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/state/auth_state.dart';
-import '../placeholder_home_screen.dart';
+import '../../features/notes/presentation/screens/note_editor_screen.dart';
+import '../../features/notes/presentation/screens/note_view_screen.dart';
+import '../../features/notes/presentation/screens/notes_list_screen.dart';
 import '../splash_screen.dart';
 import 'app_routes.dart';
 import 'auth_redirect.dart';
@@ -34,7 +36,26 @@ GoRouter appRouter(Ref ref) {
     routes: [
       GoRoute(
         path: AppRoutes.home,
-        builder: (context, state) => const PlaceholderHomeScreen(),
+        builder: (context, state) => const NotesListScreen(),
+        routes: [
+          // Declared before 'notes/:id' so "new" is not taken as an id.
+          GoRoute(
+            path: 'notes/new',
+            builder: (context, state) => const NoteEditorScreen(),
+          ),
+          GoRoute(
+            path: 'notes/:id',
+            builder: (context, state) =>
+                NoteViewScreen(noteId: state.pathParameters['id']!),
+            routes: [
+              GoRoute(
+                path: 'edit',
+                builder: (context, state) =>
+                    NoteEditorScreen(noteId: state.pathParameters['id']),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: AppRoutes.splash,

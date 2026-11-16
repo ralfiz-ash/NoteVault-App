@@ -3,6 +3,10 @@ import 'dart:async';
 import 'package:notevalult/core/errors/failure.dart';
 import 'package:notevalult/features/auth/domain/entities/app_user.dart';
 import 'package:notevalult/features/auth/domain/repositories/auth_repository.dart';
+import 'package:notevalult/features/folders/domain/entities/folder.dart';
+import 'package:notevalult/features/folders/domain/repositories/folder_repository.dart';
+import 'package:notevalult/features/tags/domain/entities/tag.dart';
+import 'package:notevalult/features/tags/domain/repositories/tag_repository.dart';
 import 'package:notevalult/features/notes/domain/entities/note.dart';
 import 'package:notevalult/features/notes/domain/repositories/note_repository.dart';
 import 'package:notevalult/features/sync/domain/entities/connectivity_status.dart';
@@ -108,6 +112,9 @@ class FakeNoteRepository implements NoteRepository {
   /// If set, the next mutation throws it.
   Failure? nextMutationError;
 
+  /// If set, the next mutation waits for it (to observe loading states).
+  Completer<void>? gate;
+
   /// If > 0, that many [watchNotes] subscriptions fail immediately.
   int failingWatches = 0;
 
@@ -122,6 +129,14 @@ class FakeNoteRepository implements NoteRepository {
       _notes[n.id] = n;
     }
     _changes.add(null);
+  }
+
+  Future<void> _wait() async {
+    final wait = gate;
+    if (wait != null) {
+      gate = null;
+      await wait.future;
+    }
   }
 
   void _throwIfQueued() {
@@ -152,6 +167,7 @@ class FakeNoteRepository implements NoteRepository {
   @override
   Future<Note> createNote(Note note) async {
     calls.add('create:${note.id}');
+    await _wait();
     _throwIfQueued();
     _notes[note.id] = note;
     _changes.add(null);
@@ -161,6 +177,7 @@ class FakeNoteRepository implements NoteRepository {
   @override
   Future<Note> updateNote(Note note) async {
     calls.add('update:${note.id}');
+    await _wait();
     _throwIfQueued();
     final existing = _notes[note.id] ?? (throw NotFoundFailure(cause: note.id));
     final saved = Note(
@@ -180,6 +197,7 @@ class FakeNoteRepository implements NoteRepository {
   @override
   Future<void> deleteNote(String id) async {
     calls.add('delete:$id');
+    await _wait();
     _throwIfQueued();
     if (_notes.remove(id) == null) throw NotFoundFailure(cause: id);
     _changes.add(null);
@@ -202,4 +220,64 @@ class FakeConnectivityRepository implements ConnectivityRepository {
     if (current != null) yield current;
     yield* _controller.stream;
   }
+}
+
+/// In-memory folders, replaying the current list to new listeners.
+class FakeFolderRepository implements FolderRepository {
+  FakeFolderRepository([List<Folder> initial = const []]) {
+    for (final f in initial) {
+      _folders[f.id] = f;
+    }
+  }
+
+  final Map<String, Folder> _folders = {};
+  final _changes = StreamController<void>.broadcast();
+
+  List<Folder> get _sorted =>
+      _folders.values.toList()
+        ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+
+  @override
+  Stream<List<Folder>> watchFolders() async* {
+    yield _sorted;
+    yield* _changes.stream.map((_) => _sorted);
+  }
+
+  @override
+  Future<List<Folder>> getFolders() async => _sorted;
+
+  @override
+  Future<Folder> getFolder(String id) async =>
+      _folders[id] ?? (throw NotFoundFailure(cause: id));
+
+  @override
+  Future<Folder> createFolder(Folder folder) async {
+    _folders[folder.id] = folder;
+    _changes.add(null);
+    return folder;
+  }
+
+  @override
+  Future<Folder> updateFolder(Folder folder) => createFolder(folder);
+
+  @override
+  Future<void> deleteFolder(String id) async {
+    _folders.remove(id);
+    _changes.add(null);
+  }
+}
+
+class FakeTagRepository implements TagRepository {
+  FakeTagRepository([this._tags = const []]);
+
+  final List<Tag> _tags;
+
+  @override
+  Stream<List<Tag>> watchTags() => Stream.value(_tags);
+
+  @override
+  Future<List<Tag>> getTags() async => _tags;
+
+  @override
+  Future<void> deleteTag(String id) async {}
 }

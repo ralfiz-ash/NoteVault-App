@@ -11,7 +11,9 @@ import 'package:notevalult/app/di/repository_providers.dart';
 import 'package:notevalult/app/provider_retry.dart';
 import 'package:notevalult/core/logging/app_logger.dart';
 import 'package:notevalult/features/auth/domain/entities/app_user.dart';
+import 'package:notevalult/features/folders/domain/repositories/folder_repository.dart';
 import 'package:notevalult/features/notes/domain/repositories/note_repository.dart';
+import 'package:notevalult/features/tags/domain/repositories/tag_repository.dart';
 
 import 'fake_repositories.dart';
 
@@ -58,8 +60,12 @@ const testUser = AppUser(uid: 'test-user', email: 'tester@example.com');
 List<Override> appTestOverrides({
   FakeAuthRepository? auth,
   NoteRepository? notes,
+  FolderRepository? folders,
+  TagRepository? tags,
   FakeConnectivityRepository? connectivity,
 }) => [
+  folderRepositoryProvider.overrideWithValue(folders ?? FakeFolderRepository()),
+  tagRepositoryProvider.overrideWithValue(tags ?? FakeTagRepository()),
   appLoggerProvider.overrideWithValue(const NoOpLogger()),
   // Signed in by default, so the router shows the app, not the auth screens.
   authRepositoryProvider.overrideWithValue(
