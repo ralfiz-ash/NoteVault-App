@@ -13,6 +13,10 @@ part of 'settings_provider.dart';
 /// Held in memory for now; loading/saving through `SettingsRepository` is
 /// added in the Settings phase without changing this provider's API.
 ///
+/// Settings belong to the signed-in user: they reset to the defaults when the
+/// user signs out or another user signs in (this provider watches the
+/// session).
+///
 /// keepAlive: settings are app-wide and must not reset to defaults when no
 /// screen happens to be listening.
 
@@ -24,6 +28,10 @@ final settingsProvider = SettingsProvider._();
 /// Held in memory for now; loading/saving through `SettingsRepository` is
 /// added in the Settings phase without changing this provider's API.
 ///
+/// Settings belong to the signed-in user: they reset to the defaults when the
+/// user signs out or another user signs in (this provider watches the
+/// session).
+///
 /// keepAlive: settings are app-wide and must not reset to defaults when no
 /// screen happens to be listening.
 final class SettingsProvider extends $NotifierProvider<Settings, AppSettings> {
@@ -31,6 +39,10 @@ final class SettingsProvider extends $NotifierProvider<Settings, AppSettings> {
   ///
   /// Held in memory for now; loading/saving through `SettingsRepository` is
   /// added in the Settings phase without changing this provider's API.
+  ///
+  /// Settings belong to the signed-in user: they reset to the defaults when the
+  /// user signs out or another user signs in (this provider watches the
+  /// session).
   ///
   /// keepAlive: settings are app-wide and must not reset to defaults when no
   /// screen happens to be listening.
@@ -61,12 +73,16 @@ final class SettingsProvider extends $NotifierProvider<Settings, AppSettings> {
   }
 }
 
-String _$settingsHash() => r'212937beefd001a9ff73723c86d2ca502a2c968b';
+String _$settingsHash() => r'e12997de51b07096b3bc36a67c147b637854b771';
 
 /// App settings (theme mode and note sort order) and how to change them.
 ///
 /// Held in memory for now; loading/saving through `SettingsRepository` is
 /// added in the Settings phase without changing this provider's API.
+///
+/// Settings belong to the signed-in user: they reset to the defaults when the
+/// user signs out or another user signs in (this provider watches the
+/// session).
 ///
 /// keepAlive: settings are app-wide and must not reset to defaults when no
 /// screen happens to be listening.

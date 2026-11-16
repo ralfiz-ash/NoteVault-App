@@ -18,7 +18,10 @@ void main() {
   setUp(() {
     repository = FakeNoteRepository();
     container = createContainer(
-      overrides: [noteRepositoryProvider.overrideWithValue(repository)],
+      overrides: [
+        noteRepositoryProvider.overrideWithValue(repository),
+        signedInOverride(),
+      ],
     );
   });
 

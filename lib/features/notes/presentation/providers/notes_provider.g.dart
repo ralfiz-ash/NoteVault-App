@@ -15,6 +15,12 @@ part of 'notes_provider.dart';
 /// `folderNotesProvider` and (later) search derive from. Keeping one database
 /// watch open avoids re-querying and a loading flash on every navigation.
 /// To retry after an error: `ref.invalidate(notesProvider)`.
+///
+/// User isolation: the notes are the signed-in user's (their own database).
+/// When nobody is signed in this is an empty list. That matters because
+/// Riverpod keeps a provider's previous value while it reloads; going through
+/// an empty list on sign-out means the previous user's notes are never what
+/// a reloading screen could show to the next user.
 
 @ProviderFor(notes)
 final notesProvider = NotesProvider._();
@@ -26,6 +32,12 @@ final notesProvider = NotesProvider._();
 /// `folderNotesProvider` and (later) search derive from. Keeping one database
 /// watch open avoids re-querying and a loading flash on every navigation.
 /// To retry after an error: `ref.invalidate(notesProvider)`.
+///
+/// User isolation: the notes are the signed-in user's (their own database).
+/// When nobody is signed in this is an empty list. That matters because
+/// Riverpod keeps a provider's previous value while it reloads; going through
+/// an empty list on sign-out means the previous user's notes are never what
+/// a reloading screen could show to the next user.
 
 final class NotesProvider
     extends
@@ -42,6 +54,12 @@ final class NotesProvider
   /// `folderNotesProvider` and (later) search derive from. Keeping one database
   /// watch open avoids re-querying and a loading flash on every navigation.
   /// To retry after an error: `ref.invalidate(notesProvider)`.
+  ///
+  /// User isolation: the notes are the signed-in user's (their own database).
+  /// When nobody is signed in this is an empty list. That matters because
+  /// Riverpod keeps a provider's previous value while it reloads; going through
+  /// an empty list on sign-out means the previous user's notes are never what
+  /// a reloading screen could show to the next user.
   NotesProvider._()
     : super(
         from: null,
@@ -67,4 +85,4 @@ final class NotesProvider
   }
 }
 
-String _$notesHash() => r'db840fc7ecd09d029324a44827870524a10b4777';
+String _$notesHash() => r'83609bb43fd5505ded35d939f3b5bf0e1ea8ad01';
