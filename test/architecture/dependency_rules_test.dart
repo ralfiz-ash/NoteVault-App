@@ -92,6 +92,9 @@ void main() {
 
       switch (p.layer) {
         case 'domain':
+          if (imp.startsWith('lib/core/database/')) {
+            report(file, imp, 'domain must not use the database');
+          }
           if (isFlutter(imp) || isRiverpod(imp) || isInfra(imp)) {
             report(file, imp, 'domain must be pure Dart');
           }
@@ -111,6 +114,9 @@ void main() {
             }
           }
         case 'presentation':
+          if (imp.startsWith('lib/core/database/')) {
+            report(file, imp, 'presentation must not use the database');
+          }
           if (isInfra(imp)) {
             report(file, imp, 'presentation must not use infrastructure SDKs');
           }

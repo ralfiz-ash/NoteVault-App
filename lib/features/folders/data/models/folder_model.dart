@@ -20,7 +20,10 @@ class FolderModel {
   factory FolderModel.fromMap(Map<String, dynamic> map) => FolderModel(
     id: map['id'] as String,
     name: map['name'] as String,
-    createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
+    createdAt: DateTime.fromMillisecondsSinceEpoch(
+      map['createdAt'] as int,
+      isUtc: true,
+    ),
   );
 
   Map<String, dynamic> toMap() => {
