@@ -21,7 +21,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('NoteVault'), findsOneWidget);
-    expect(find.text('Foundation ready'), findsOneWidget);
+    expect(find.text('Notes'), findsOneWidget);
+    expect(find.text('No notes yet'), findsOneWidget);
   });
 }

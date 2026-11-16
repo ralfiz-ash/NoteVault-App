@@ -1,9 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../app/di/repository_providers.dart';
+import '../../../../core/usecase/usecase.dart';
 import '../../../../app/di/session_providers.dart';
 import '../../domain/entities/note.dart';
+import 'note_use_case_providers.dart';
 
 part 'notes_provider.g.dart';
 
@@ -26,5 +27,5 @@ Stream<List<Note>> notes(Ref ref) {
     currentUserIdProvider.select((session) => session.value),
   );
   if (userId == null) return Stream.value(const <Note>[]);
-  return ref.watch(noteRepositoryProvider).watchNotes();
+  return ref.watch(observeNotesProvider)(const NoParams());
 }

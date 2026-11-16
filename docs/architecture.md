@@ -297,6 +297,46 @@ AuthRepository -> AuthRepositoryImpl -> FirebaseAuthRemoteDataSource (data)
   - Notes created before Phase 6 were in the shared `notevault` file and are
     not migrated (pre-release data).
 
+## Notes CRUD (Phase 7)
+
+```
+NotesListScreen ---- ref.watch(visibleNotesProvider) <- notesProvider <- ObserveNotes
+NoteViewScreen ----- ref.watch(noteProvider(id))       (derived from notesProvider)
+NoteEditorScreen --- CreateNoteController / UpdateNoteController (AsyncNotifier)
+Delete (list/view) - DeleteNoteController + PendingNoteDeletions (optimistic)
+        each controller -> use case -> NoteRepository -> local data source -> Drift
+```
+
+- **Use cases**: `CreateNote` (draft -> validated note with a new id and UTC
+  timestamps), `UpdateNote`, `DeleteNote`, `GetNote`, `GetNotes`,
+  `ObserveNotes`. `NoteDraft` (domain) is the editable part of a note;
+  `NoteValidators` holds the rules (title required, at most 200 characters;
+  content may be empty; tags trimmed, de-duplicated, at most 20).
+- **Reads**: the list and `noteProvider(id)` come from one live database
+  watch, so every successful mutation shows up everywhere without manual
+  refresh, and a deleted note's screen notices it is gone.
+  `noteProvider(id)` filters the shared list instead of running its own
+  query (one source of truth, no duplicate copies).
+- **Optimistic delete**: the id goes into `PendingNoteDeletions`, so the list
+  hides it at once; on failure it is removed again (the note reappears) and
+  the list shows "Unable to delete note". Create and update are not
+  optimistic: the local database answers immediately and the list updates
+  from it, so a failed save never leaves a phantom note.
+- **Editor**: one screen for new and edit. Text controllers, folder, tags and
+  the saved baseline live in the screen's State (gone when it closes).
+  Unsaved changes = current values differ from the baseline (the note as
+  loaded, so loading is not a change). Leaving with changes (back button,
+  system back, gesture) asks Stay / Discard via `PopScope`.
+- **Folders/tags in the editor**: pick a folder (or create one by name);
+  type tags or reuse suggested existing ones. Tags stay independent.
+- **Dates**: stored and passed around as UTC; `formatDateTime`
+  (`core/presentation`) converts with `toLocal()` only for display.
+- **Cross-feature UI**: feature presentation may use another feature's
+  `presentation/providers` and `presentation/state` (its public API), never
+  its screens or widgets (architecture test).
+- **Offline**: notes CRUD only touches the local database; Firestore is not
+  used (sync comes later).
+
 ## Adding a feature
 
 1. Create `features/<name>/{domain,data,presentation}` with the subfolders above.

@@ -50,7 +50,7 @@ void main() {
 
       auth.emit(testUser); // restored session
       await tester.pumpAndSettle();
-      expect(find.text('Foundation ready'), findsOneWidget);
+      expect(find.text('No notes yet'), findsOneWidget);
     });
   });
 
@@ -93,7 +93,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(auth.calls, ['signIn:me@example.com']);
-      expect(find.text('Foundation ready'), findsOneWidget);
+      expect(find.text('No notes yet'), findsOneWidget);
     });
 
     testWidgets('shows the mapped error once', (tester) async {
@@ -125,7 +125,8 @@ void main() {
       auth.nextUser = const AppUser(uid: 'g', email: 'g@example.com');
       await tapText(tester, 'Continue with Google');
       await tester.pumpAndSettle();
-      expect(find.text('Signed in as g@example.com'), findsOneWidget);
+      expect(find.text('No notes yet'), findsOneWidget);
+      expect(auth.currentUser?.email, 'g@example.com');
     });
 
     testWidgets('Google failure shows its message', (tester) async {
@@ -206,7 +207,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(auth.calls, ['register:new@example.com']);
-      expect(find.text('Foundation ready'), findsOneWidget);
+      expect(find.text('No notes yet'), findsOneWidget);
     });
   });
 
@@ -269,13 +270,13 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Foundation ready'), findsOneWidget);
+    expect(find.text('No notes yet'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Sign out'));
     await tester.pumpAndSettle();
 
     expect(auth.calls, ['signOut']);
     expect(find.text('Welcome back'), findsOneWidget);
-    expect(find.text('Foundation ready'), findsNothing);
+    expect(find.text('No notes yet'), findsNothing);
   });
 }

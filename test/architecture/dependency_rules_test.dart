@@ -143,11 +143,19 @@ void main() {
             if (target.layer == 'data') {
               report(file, imp, 'presentation must not import data');
             }
-            if (target.layer == 'presentation' && target.feature != p.feature) {
+            // Another feature's providers/state are its public presentation
+            // API (e.g. the notes editor uses the folders list); its screens
+            // and widgets are not.
+            final isProviderApi =
+                imp.contains('/presentation/providers/') ||
+                imp.contains('/presentation/state/');
+            if (target.layer == 'presentation' &&
+                target.feature != p.feature &&
+                !isProviderApi) {
               report(
                 file,
                 imp,
-                'presentation must not import another feature\'s presentation',
+                'presentation must not import another feature\'s screens/widgets',
               );
             }
           }

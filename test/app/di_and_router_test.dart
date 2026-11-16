@@ -59,7 +59,7 @@ void main() {
 
       await tester.tap(find.byType(FilledButton));
       await tester.pumpAndSettle();
-      expect(find.text('Foundation ready'), findsOneWidget);
+      expect(find.text('No notes yet'), findsOneWidget);
     });
   });
 }

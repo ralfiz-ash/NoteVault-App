@@ -2,6 +2,10 @@
 abstract final class AppRoutes {
   static const home = '/';
 
+  static const newNote = '/notes/new';
+  static String note(String id) => '/notes/$id';
+  static String editNote(String id) => '/notes/$id/edit';
+
   /// Shown while Firebase restores the session at startup.
   static const splash = '/splash';
 
