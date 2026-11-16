@@ -86,8 +86,12 @@ void main() {
         continue;
       }
       if (p == null) continue;
-      if (imp.startsWith('lib/app/')) {
-        report(file, imp, 'features must not depend on app');
+      // Feature presentation may read the DI providers in lib/app/di (typed
+      // by domain abstractions); nothing else in a feature may touch app/.
+      final isDiProviders = imp.startsWith('lib/app/di/');
+      if (imp.startsWith('lib/app/') &&
+          !(isDiProviders && p.layer == 'presentation')) {
+        report(file, imp, 'features may only use app/di, from presentation');
       }
 
       switch (p.layer) {

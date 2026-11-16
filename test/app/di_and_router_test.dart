@@ -44,9 +44,7 @@ void main() {
     testWidgets('unknown location shows the error screen and can recover', (
       tester,
     ) async {
-      final container = createContainer(
-        overrides: [appLoggerProvider.overrideWithValue(const NoOpLogger())],
-      );
+      final container = createContainer(overrides: appTestOverrides());
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,

@@ -54,7 +54,8 @@ presentation ──▶ domain ◀── data          core ◀── everything
 | `presentation` | `domain`, `core`, own `presentation` | `data`, infrastructure SDKs, another feature's `presentation` |
 | `core` | itself | `features/`, `app/` |
 | `app` | everything | (it is the composition root) |
-| any feature | - | `app/` |
+| feature `presentation` | `app/di/` (DI providers only) | the rest of `app/` |
+| feature `domain` / `data` | - | `app/` |
 
 Presentation never talks to `data` directly. It depends on repository
 *contracts* and use cases from `domain`. The concrete `data` classes are
@@ -209,6 +210,52 @@ Data:    AuthRepositoryImpl                 NoteRemoteRepositoryImpl
 - **Security rules**: `firestore.rules`, owner-only notes, deny by default.
 - **Tests** use fakes (`test/helpers/fake_firebase_auth.dart`,
   `fake_cloud_firestore`), never the live project.
+
+## Riverpod architecture (Phase 5)
+
+Riverpod is the dependency-injection and state layer. Generated providers
+(`@riverpod`) only; run `dart run build_runner build` after changes.
+
+```
+ProviderScope (bootstrap: config, logger, retry policy)
+ |
+ |-- app/di: infrastructure + repositories (typed by domain interfaces)
+ |     appDatabase -> note/folder/tag data sources -> repositories
+ |     FirebaseAuth, GoogleSignIn -> authRepository
+ |     FirebaseFirestore -> noteRemoteRepository
+ |     Connectivity -> connectivityRepository
+ |
+ '-- feature presentation providers (watch repositories, never data classes)
+       authStateProvider          Stream<AuthState>   keepAlive
+       notesProvider              Stream<List<Note>>  keepAlive
+         |-- noteProvider(id)               Future<Note>        autoDispose
+         '-- folderNotesProvider(folderId)  Future<List<Note>>  autoDispose
+       noteMutationsProvider      AsyncNotifier<NoteMutationResult?> autoDispose
+       settingsProvider           Notifier<AppSettings>              keepAlive
+       connectionStatusProvider   Stream<ConnectivityStatus>         keepAlive
+```
+
+- **Why presentation may import `app/di`**: providers there are typed by
+  domain interfaces (`NoteRepository`, `AuthRepository`, ...), so screens and
+  notifiers get dependencies without importing data classes. Nothing else in
+  `app/` is visible to features (architecture test).
+- **Lifecycles**: `keepAlive` only for app-wide state that must survive
+  without listeners (session, shared notes cache, settings, network status);
+  each one documents why. Per-screen and per-id providers are auto-disposed.
+  `ref.onDispose` closes resources the providers create (database, router).
+- **Async state**: `AsyncValue` everywhere (loading / data / error); an empty
+  list is data. Mutations expose `AsyncValue<NoteMutationResult?>`: `null` is
+  idle, a result is success. Retry with `ref.invalidate(...)`.
+- **Retry policy** (`lib/app/provider_retry.dart`): Riverpod 3 retries failed
+  providers by default; NoteVault retries only `NetworkFailure` (3 times with
+  backoff). Other failures show immediately.
+- **ref usage**: `ref.watch` to build UI and in providers that depend on
+  others; `ref.read` in callbacks and notifier methods; `ref.listen` for side
+  effects (SnackBar, navigation). Example: `PlaceholderHomeScreen`.
+- **Not yet**: settings persistence (Settings phase), user-dependent resets
+  on logout (later), sort/search/filter (Search phase), sync.
+- **Tests**: `createContainer(overrides: ...)` and `appTestOverrides()` in
+  `test/helpers/`, with fakes in `test/helpers/fake_repositories.dart`.
 
 ## Adding a feature
 

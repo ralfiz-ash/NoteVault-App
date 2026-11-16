@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme/app_theme.dart';
+import '../features/settings/domain/entities/app_settings.dart';
+import '../features/settings/presentation/providers/settings_provider.dart';
 import 'di/core_providers.dart';
 import 'router/app_router.dart';
 
@@ -12,14 +14,23 @@ class NoteVaultApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     final config = ref.watch(appConfigProvider);
+    final themeMode = ref.watch(
+      settingsProvider.select((settings) => settings.themeMode),
+    );
 
     return MaterialApp.router(
       title: config.appName,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      // Becomes user-selectable when the settings feature is built.
-      themeMode: ThemeMode.system,
+      themeMode: _toThemeMode(themeMode),
       routerConfig: router,
     );
   }
 }
+
+/// Maps the domain preference to Flutter's [ThemeMode] (presentation concern).
+ThemeMode _toThemeMode(ThemeModePreference preference) => switch (preference) {
+  ThemeModePreference.system => ThemeMode.system,
+  ThemeModePreference.light => ThemeMode.light,
+  ThemeModePreference.dark => ThemeMode.dark,
+};
