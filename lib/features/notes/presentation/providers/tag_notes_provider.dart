@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../tags/presentation/providers/tags_provider.dart';
@@ -10,13 +11,19 @@ part 'tag_notes_provider.g.dart';
 /// [visibleNotesProvider] and [tagsProvider] (notes store tag names; tags
 /// map ids to names, matched ignoring case), so renaming a tag keeps the
 /// filter working. One instance per tag id, auto-disposed when unused.
+///
+/// Only the tag's name is watched, so recolouring a tag does not recompute
+/// this list.
 @riverpod
 AsyncValue<List<Note>> tagNotes(Ref ref, String tagId) {
-  final tags = ref.watch(tagsProvider).value ?? const [];
-  final name = tags
-      .where((t) => t.id == tagId)
-      .map((t) => t.name.toLowerCase())
-      .firstOrNull;
+  final name = ref.watch(
+    tagsProvider.select(
+      (tags) => tags.value
+          ?.where((t) => t.id == tagId)
+          .map((t) => t.name.toLowerCase())
+          .firstOrNull,
+    ),
+  );
   return ref
       .watch(visibleNotesProvider)
       .whenData(

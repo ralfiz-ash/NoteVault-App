@@ -4,8 +4,6 @@ import '../../../../app/di/database_providers.dart';
 import '../../../../app/di/repository_providers.dart';
 import '../../domain/usecases/create_note.dart';
 import '../../domain/usecases/delete_note.dart';
-import '../../domain/usecases/get_note.dart';
-import '../../domain/usecases/get_notes.dart';
 import '../../domain/usecases/observe_notes.dart';
 import '../../domain/usecases/update_note.dart';
 
@@ -18,12 +16,6 @@ part 'note_use_case_providers.g.dart';
 @Riverpod(keepAlive: true)
 ObserveNotes observeNotes(Ref ref) =>
     ObserveNotes(ref.watch(noteRepositoryProvider));
-
-@riverpod
-GetNotes getNotes(Ref ref) => GetNotes(ref.watch(noteRepositoryProvider));
-
-@riverpod
-GetNote getNote(Ref ref) => GetNote(ref.watch(noteRepositoryProvider));
 
 @riverpod
 CreateNote createNote(Ref ref) => CreateNote(

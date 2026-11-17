@@ -247,18 +247,26 @@ final class NoteQueryProvider
 
 String _$noteQueryHash() => r'52862b024c4f28ffce642d857f6c706531a142d1';
 
-/// THE list the notes screen shows: the user's notes (minus deletions in
-/// progress) filtered and sorted by [noteQueryProvider] in one pass. Derived
-/// only; nothing is stored. Loading and errors of the notes pass through
-/// unchanged (an error is never turned into an empty list).
+/// THE list the notes screen shows. Derived only; nothing is stored.
+///
+/// It starts from the per-folder / per-tag family providers
+/// (`folderNotesProvider(folderId)`, `tagNotesProvider(tagId)`, each cached
+/// separately) or all visible notes, then [NoteQuery.apply] adds search and
+/// the other active filter and sorts, in one pass. All matching rules live in
+/// [NoteQuery]. Loading and errors pass through unchanged (an error is never
+/// turned into an empty list).
 
 @ProviderFor(filteredNotes)
 final filteredNotesProvider = FilteredNotesProvider._();
 
-/// THE list the notes screen shows: the user's notes (minus deletions in
-/// progress) filtered and sorted by [noteQueryProvider] in one pass. Derived
-/// only; nothing is stored. Loading and errors of the notes pass through
-/// unchanged (an error is never turned into an empty list).
+/// THE list the notes screen shows. Derived only; nothing is stored.
+///
+/// It starts from the per-folder / per-tag family providers
+/// (`folderNotesProvider(folderId)`, `tagNotesProvider(tagId)`, each cached
+/// separately) or all visible notes, then [NoteQuery.apply] adds search and
+/// the other active filter and sorts, in one pass. All matching rules live in
+/// [NoteQuery]. Loading and errors pass through unchanged (an error is never
+/// turned into an empty list).
 
 final class FilteredNotesProvider
     extends
@@ -268,10 +276,14 @@ final class FilteredNotesProvider
           AsyncValue<List<Note>>
         >
     with $Provider<AsyncValue<List<Note>>> {
-  /// THE list the notes screen shows: the user's notes (minus deletions in
-  /// progress) filtered and sorted by [noteQueryProvider] in one pass. Derived
-  /// only; nothing is stored. Loading and errors of the notes pass through
-  /// unchanged (an error is never turned into an empty list).
+  /// THE list the notes screen shows. Derived only; nothing is stored.
+  ///
+  /// It starts from the per-folder / per-tag family providers
+  /// (`folderNotesProvider(folderId)`, `tagNotesProvider(tagId)`, each cached
+  /// separately) or all visible notes, then [NoteQuery.apply] adds search and
+  /// the other active filter and sorts, in one pass. All matching rules live in
+  /// [NoteQuery]. Loading and errors pass through unchanged (an error is never
+  /// turned into an empty list).
   FilteredNotesProvider._()
     : super(
         from: null,
@@ -306,4 +318,4 @@ final class FilteredNotesProvider
   }
 }
 
-String _$filteredNotesHash() => r'b5d9d687fdc5b842325cf3f6fbd9b1dfb193c4d7';
+String _$filteredNotesHash() => r'309301878b7f96437a98fecc3586ce2998611ad3';

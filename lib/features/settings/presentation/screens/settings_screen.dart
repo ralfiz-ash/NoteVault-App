@@ -29,7 +29,6 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
     final theme = ref.watch(themeModePreferenceProvider);
     final sort = ref.watch(noteSortSettingProvider);
@@ -40,92 +39,87 @@ class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
-      body: settings.isLoading && !settings.hasValue
-          ? const Center(child: CircularProgressIndicator())
-          : ContentWidth(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                children: [
-                  const _Section('Appearance'),
-                  const _Label('Theme'),
-                  SegmentedButton<ThemeModePreference>(
-                    key: const Key('theme-mode'),
-                    segments: const [
-                      ButtonSegment(
-                        value: ThemeModePreference.system,
-                        icon: Icon(Icons.brightness_auto),
-                        label: Text('System'),
-                      ),
-                      ButtonSegment(
-                        value: ThemeModePreference.light,
-                        icon: Icon(Icons.light_mode_outlined),
-                        label: Text('Light'),
-                      ),
-                      ButtonSegment(
-                        value: ThemeModePreference.dark,
-                        icon: Icon(Icons.dark_mode_outlined),
-                        label: Text('Dark'),
-                      ),
-                    ],
-                    selected: {theme},
-                    onSelectionChanged: (s) =>
-                        _apply(context, notifier.setThemeMode(s.single)),
-                  ),
-                  const SizedBox(height: 24),
-                  const _Section('Notes'),
-                  const _Label('Sort by'),
-                  SegmentedButton<NoteSortField>(
-                    key: const Key('sort-field'),
-                    segments: const [
-                      ButtonSegment(
-                        value: NoteSortField.updated,
-                        label: Text('Edited'),
-                      ),
-                      ButtonSegment(
-                        value: NoteSortField.created,
-                        label: Text('Created'),
-                      ),
-                      ButtonSegment(
-                        value: NoteSortField.title,
-                        label: Text('Title'),
-                      ),
-                    ],
-                    selected: {sort.field},
-                    onSelectionChanged: (s) => _apply(
-                      context,
-                      notifier.setNoteSort(sort.copyWith(field: s.single)),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const _Label('Order'),
-                  SegmentedButton<bool>(
-                    key: const Key('sort-direction'),
-                    segments: [
-                      ButtonSegment(
-                        value: false,
-                        icon: const Icon(Icons.arrow_downward),
-                        label: Text(descLabel),
-                      ),
-                      ButtonSegment(
-                        value: true,
-                        icon: const Icon(Icons.arrow_upward),
-                        label: Text(ascLabel),
-                      ),
-                    ],
-                    selected: {sort.ascending},
-                    onSelectionChanged: (s) => _apply(
-                      context,
-                      notifier.setNoteSort(sort.copyWith(ascending: s.single)),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Settings are saved on this device for your account.',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
+      body: ContentWidth(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+          children: [
+            const _Section('Appearance'),
+            const _Label('Theme'),
+            SegmentedButton<ThemeModePreference>(
+              key: const Key('theme-mode'),
+              segments: const [
+                ButtonSegment(
+                  value: ThemeModePreference.system,
+                  icon: Icon(Icons.brightness_auto),
+                  label: Text('System'),
+                ),
+                ButtonSegment(
+                  value: ThemeModePreference.light,
+                  icon: Icon(Icons.light_mode_outlined),
+                  label: Text('Light'),
+                ),
+                ButtonSegment(
+                  value: ThemeModePreference.dark,
+                  icon: Icon(Icons.dark_mode_outlined),
+                  label: Text('Dark'),
+                ),
+              ],
+              selected: {theme},
+              onSelectionChanged: (s) =>
+                  _apply(context, notifier.setThemeMode(s.single)),
+            ),
+            const SizedBox(height: 24),
+            const _Section('Notes'),
+            const _Label('Sort by'),
+            SegmentedButton<NoteSortField>(
+              key: const Key('sort-field'),
+              segments: const [
+                ButtonSegment(
+                  value: NoteSortField.updated,
+                  label: Text('Edited'),
+                ),
+                ButtonSegment(
+                  value: NoteSortField.created,
+                  label: Text('Created'),
+                ),
+                ButtonSegment(value: NoteSortField.title, label: Text('Title')),
+              ],
+              selected: {sort.field},
+              onSelectionChanged: (s) => _apply(
+                context,
+                notifier.setNoteSort(sort.copyWith(field: s.single)),
               ),
             ),
+            const SizedBox(height: 16),
+            const _Label('Order'),
+            SegmentedButton<bool>(
+              key: const Key('sort-direction'),
+              segments: [
+                ButtonSegment(
+                  value: false,
+                  icon: const Icon(Icons.arrow_downward),
+                  label: Text(descLabel),
+                ),
+                ButtonSegment(
+                  value: true,
+                  icon: const Icon(Icons.arrow_upward),
+                  label: Text(ascLabel),
+                ),
+              ],
+              selected: {sort.ascending},
+              onSelectionChanged: (s) => _apply(
+                context,
+                notifier.setNoteSort(sort.copyWith(ascending: s.single)),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Settings are saved on this device for your account.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

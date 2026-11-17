@@ -9,6 +9,8 @@ import '../../../tags/presentation/providers/tags_provider.dart';
 import '../../domain/entities/note.dart';
 import '../../domain/entities/note_query.dart';
 import '../state/notes_filter.dart';
+import 'folder_notes_provider.dart';
+import 'tag_notes_provider.dart';
 import 'visible_notes_provider.dart';
 
 part 'notes_filter_provider.g.dart';
@@ -95,12 +97,24 @@ NoteQuery noteQuery(Ref ref) {
   );
 }
 
-/// THE list the notes screen shows: the user's notes (minus deletions in
-/// progress) filtered and sorted by [noteQueryProvider] in one pass. Derived
-/// only; nothing is stored. Loading and errors of the notes pass through
-/// unchanged (an error is never turned into an empty list).
+/// THE list the notes screen shows. Derived only; nothing is stored.
+///
+/// It starts from the per-folder / per-tag family providers
+/// (`folderNotesProvider(folderId)`, `tagNotesProvider(tagId)`, each cached
+/// separately) or all visible notes, then [NoteQuery.apply] adds search and
+/// the other active filter and sorts, in one pass. All matching rules live in
+/// [NoteQuery]. Loading and errors pass through unchanged (an error is never
+/// turned into an empty list).
 @riverpod
 AsyncValue<List<Note>> filteredNotes(Ref ref) {
   final query = ref.watch(noteQueryProvider);
-  return ref.watch(visibleNotesProvider).whenData(query.apply);
+  final filter = ref.watch(notesFilterControllerProvider);
+  final tagId = filter.tagId;
+  final base = switch (filter.folder) {
+    InFolder(:final folderId) => ref.watch(folderNotesProvider(folderId)),
+    NoFolder() => ref.watch(folderNotesProvider(null)),
+    AnyFolder() when tagId != null => ref.watch(tagNotesProvider(tagId)),
+    AnyFolder() => ref.watch(visibleNotesProvider),
+  };
+  return base.whenData(query.apply);
 }
