@@ -9,7 +9,7 @@ import 'package:sqlite3/sqlite3.dart';
 /// A database created by the previous app version (schema 1, no tag colour)
 /// must open, keep its data and give existing tags the default colour.
 void main() {
-  test('schema 1 -> 2 adds tags.color with the default', () async {
+  test('schema 1 -> 3: tag colour default and existing notes queued', () async {
     final dir = Directory.systemTemp.createTempSync('notevault_migration');
     addTearDown(() => dir.deleteSync(recursive: true));
     final file = File('${dir.path}/v1.sqlite');
@@ -49,5 +49,9 @@ void main() {
     expect(tags.single.color, TagColors.defaultValue);
     expect((await db.select(db.notes).get()).single.title, 'T');
     expect((await db.select(db.noteTags).get()), hasLength(1));
+    // Schema 3: notes from before sync existed are queued for upload.
+    final queued = await db.select(db.syncQueue).get();
+    expect(queued.single.entityId, 'n1');
+    expect(queued.single.operation, 'create');
   });
 }

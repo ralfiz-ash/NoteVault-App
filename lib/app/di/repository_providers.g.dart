@@ -112,7 +112,7 @@ final class NoteRepositoryProvider
   }
 }
 
-String _$noteRepositoryHash() => r'cbaea3b98d7d30b0e57d5e59b644916e69fbb608';
+String _$noteRepositoryHash() => r'd8df87d255f87ff83773356cbcd0bd2b0a418b6d';
 
 @ProviderFor(folderLocalDataSource)
 final folderLocalDataSourceProvider = FolderLocalDataSourceProvider._();
@@ -206,7 +206,7 @@ final class FolderRepositoryProvider
   }
 }
 
-String _$folderRepositoryHash() => r'e0b965ea52e232b203aad3b9eace0fd7af4142a5';
+String _$folderRepositoryHash() => r'063c591ddbae6728712bac0d61c7ca973807fdf7';
 
 @ProviderFor(tagLocalDataSource)
 final tagLocalDataSourceProvider = TagLocalDataSourceProvider._();
@@ -295,4 +295,4 @@ final class TagRepositoryProvider
   }
 }
 
-String _$tagRepositoryHash() => r'5912031b1a6e251537eeb225cc841963015ec678';
+String _$tagRepositoryHash() => r'a32f8deaa43fb52f9310e9436fe7fd55a287a210';

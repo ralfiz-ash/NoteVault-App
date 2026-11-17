@@ -62,6 +62,14 @@ class NoteRemoteRepositoryImpl implements NoteRemoteRepository {
     if (!await remote.deleteNote(userId, noteId)) throw _notFound(noteId);
   });
 
+  @override
+  Future<void> upsertNote(String userId, Note note) =>
+      _guard(() => remote.upsertNote(userId, NoteModel.fromEntity(note)));
+
+  @override
+  Future<void> deleteNoteIfExists(String userId, String noteId) =>
+      _guard(() => remote.deleteNoteIfExists(userId, noteId));
+
   Future<Note> _require(String userId, String noteId) async {
     final model = await remote.getNote(userId, noteId);
     if (model == null) throw _notFound(noteId);

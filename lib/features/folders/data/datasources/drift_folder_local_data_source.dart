@@ -44,6 +44,14 @@ class DriftFolderLocalDataSource implements FolderLocalDataSource {
   }
 
   @override
+  Future<List<String>> noteIdsInFolder(String id) async {
+    final query = _db.selectOnly(_db.notes)
+      ..addColumns([_db.notes.id])
+      ..where(_db.notes.folderId.equals(id));
+    return [for (final row in await query.get()) row.read(_db.notes.id)!];
+  }
+
+  @override
   Future<bool> deleteFolder(String id) {
     return _db.transaction(() async {
       // Notes are kept and become folder-less: one UPDATE for all of them

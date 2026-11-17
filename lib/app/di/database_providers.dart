@@ -3,6 +3,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/database/app_database.dart';
 import '../../core/database/local_database_exception_mapper.dart';
+import '../../core/database/local_transaction.dart';
+import '../../core/database/sync_queue_store.dart';
 import '../../core/errors/exception_mapper.dart';
 import '../../core/errors/failure.dart';
 import '../../core/utils/clock.dart';
@@ -63,3 +65,13 @@ Clock clock(Ref ref) => DateTime.now;
 
 @Riverpod(keepAlive: true)
 IdGenerator idGenerator(Ref ref) => UuidV4Generator();
+
+/// The signed-in user's persistent sync queue (in their database).
+@Riverpod(keepAlive: true)
+SyncQueueStore syncQueueStore(Ref ref) =>
+    SyncQueueStore(ref.watch(appDatabaseProvider), ref.watch(clockProvider));
+
+/// Makes a local change and its sync record one transaction.
+@Riverpod(keepAlive: true)
+LocalTransactionRunner localTransactions(Ref ref) =>
+    DriftTransactionRunner(ref.watch(appDatabaseProvider));

@@ -173,4 +173,9 @@ class _ThrowingRemote implements NoteRemoteDataSource {
   Future<bool> updateNote(String userId, NoteModel note) => Future.error(error);
   @override
   Future<bool> deleteNote(String userId, String noteId) => Future.error(error);
+  @override
+  Future<void> upsertNote(String userId, NoteModel note) => Future.error(error);
+  @override
+  Future<void> deleteNoteIfExists(String userId, String noteId) =>
+      Future.error(error);
 }

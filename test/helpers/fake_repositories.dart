@@ -10,6 +10,8 @@ import 'package:notevalult/features/tags/domain/repositories/tag_repository.dart
 import 'package:notevalult/features/notes/domain/entities/note.dart';
 import 'package:notevalult/features/notes/domain/repositories/note_repository.dart';
 import 'package:notevalult/features/sync/domain/entities/connectivity_status.dart';
+import 'package:notevalult/features/sync/domain/entities/sync_entities.dart';
+import 'package:notevalult/features/sync/domain/repositories/sync_repository.dart';
 import 'package:notevalult/features/sync/domain/repositories/connectivity_repository.dart';
 
 /// Auth repository driven by the test: call [emit] to change the session.
@@ -334,5 +336,36 @@ class FakeTagRepository implements TagRepository {
     _throwIfQueued();
     if (_tags.remove(id) == null) throw NotFoundFailure(cause: id);
     _changes.add(null);
+  }
+}
+
+/// Sync repository driven by the test: set [pending] and [nextReport].
+class FakeSyncRepository implements SyncRepository {
+  final _controller = StreamController<PendingChanges>.broadcast();
+  PendingChanges _current = PendingChanges.none;
+  SyncReport nextReport = const SyncReport();
+  Completer<void>? gate;
+  final calls = <String>[];
+
+  set pending(PendingChanges value) {
+    _current = value;
+    _controller.add(value);
+  }
+
+  @override
+  Stream<PendingChanges> watchPendingChanges() async* {
+    yield _current;
+    yield* _controller.stream;
+  }
+
+  @override
+  Future<SyncReport> syncPendingChanges(String userId) async {
+    calls.add(userId);
+    final wait = gate;
+    if (wait != null) {
+      gate = null;
+      await wait.future;
+    }
+    return nextReport;
   }
 }

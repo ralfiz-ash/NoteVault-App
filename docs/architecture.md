@@ -401,6 +401,54 @@ notesProvider (database watch)
   notes found" (filters/search match nothing), with a specific message for
   search, folder, tag or combinations. Errors stay errors.
 
+## Offline-first sync (Phase 10)
+
+```
+UI -> use case -> NoteRepository ── one local transaction ──┐
+                                   note row + sync_queue row ┘
+                                              |
+SyncController (when to sync) -> SyncPendingChanges -> SyncRepository
+   triggers: sign-in/start, offline->online, new queued changes (2 s),
+             failed run (30 s doubling to 5 min), Retry button
+                                              |
+   for each queued note: claim -> upsert current local note / delete
+                         -> remove from queue (or mark failed, keep)
+                                              |
+                     NoteRemoteRepository -> Firestore users/{uid}/notes/{id}
+```
+
+- **Local first**: every note change (and changes caused by deleting a
+  folder or renaming/deleting a tag) is written locally and recorded in the
+  `sync_queue` table in the same transaction. The UI never waits for the
+  network; offline CRUD works unchanged.
+- **Persistent queue** (`core/database/sync_queue_store.dart`, schema 3):
+  one row per note with operation, status (pending/syncing/failed), version,
+  retry count and last error. No copy of the note: the current local note is
+  uploaded, so the latest state always wins. The migration queued notes that
+  existed before sync.
+- **Merging**: create+update -> create, update+update -> update,
+  create+delete -> dropped only if the create was never attempted,
+  otherwise delete; any+delete -> delete. Each change bumps the version.
+- **Safety**:
+  - Idempotent: upload = Firestore `set` on the note's own id; delete
+    succeeds if already gone. Retries never duplicate documents.
+  - Single flight: `SyncRepositoryImpl` shares a running sync with any new
+    call and runs once more afterwards; items are also claimed by version in
+    the database, so one item is never uploaded twice at once.
+  - A change during an upload keeps the row pending (version moved on); the
+    newer state goes next. Failures keep the row (failed + error); local data
+    is never rolled back. Rows left "syncing" by a killed app are released at
+    the next run. Writes time out after 20 s and are retried later.
+- **Conflict strategy**: last local change wins. The cloud copy is replaced
+  by (or deleted like) the device's current note. Nothing is downloaded yet,
+  so an upload never changes local data.
+- **UI**: `SyncStatusBanner` (notes list) shows offline, syncing, failed with
+  Retry, or "N changes waiting to sync". `pendingChangesProvider` reads the
+  queue (no separate counter). `SyncController` is started once by the app
+  with `ref.listen`, so widget rebuilds never start a sync.
+- **Scope**: notes only. Folders and tags are not synced as entities yet;
+  their effect on notes (folder cleared, tag names) is.
+
 ## Adding a feature
 
 1. Create `features/<name>/{domain,data,presentation}` with the subfolders above.

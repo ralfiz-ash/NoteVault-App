@@ -22,4 +22,12 @@ abstract interface class NoteRemoteDataSource {
 
   /// Returns `false` when there is no such note.
   Future<bool> deleteNote(String userId, String noteId);
+
+  /// Writes [note] as it is (creates or replaces). Idempotent: repeating it
+  /// leaves exactly one document, named by the note id. Used by sync.
+  Future<void> upsertNote(String userId, NoteModel note);
+
+  /// Deletes the note if it exists; succeeds if it is already gone.
+  /// Idempotent. Used by sync.
+  Future<void> deleteNoteIfExists(String userId, String noteId);
 }
