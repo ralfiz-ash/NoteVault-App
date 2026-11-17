@@ -34,6 +34,7 @@ class NoteTagActions extends _$NoteTagActions {
   );
 
   Future<void> _run(Future<Object?> Function() action) async {
+    if (state.isLoading) return; // no double submit
     state = const AsyncLoading();
     final result = await AsyncValue.guard<void>(action);
     if (ref.mounted) state = result;

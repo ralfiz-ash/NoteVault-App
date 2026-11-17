@@ -40,17 +40,21 @@ class FolderPicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final folders = ref.watch(foldersProvider).value ?? const <Folder>[];
+    final foldersState = ref.watch(foldersProvider);
+    final folders = foldersState.value ?? const <Folder>[];
     final known = folders.any((f) => f.id == folderId);
 
     return DropdownButtonFormField<String?>(
       key: ValueKey('folder-$folderId-${folders.length}'),
       initialValue: folderId,
       isExpanded: true,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: 'Folder',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.folder_outlined),
+        border: const OutlineInputBorder(),
+        prefixIcon: const Icon(Icons.folder_outlined),
+        helperText: foldersState.hasError
+            ? 'Folders could not be loaded; the note can still be saved.'
+            : null,
       ),
       items: [
         const DropdownMenuItem(value: null, child: Text('No folder')),

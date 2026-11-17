@@ -22,6 +22,8 @@ class DeleteNoteController extends _$DeleteNoteController {
 
   /// Returns `true` if the note was deleted.
   Future<bool> delete(String noteId) async {
+    // Already being deleted (e.g. swiped and deleted from its screen).
+    if (ref.read(pendingNoteDeletionsProvider).contains(noteId)) return false;
     final pending = ref.read(pendingNoteDeletionsProvider.notifier)
       ..add(noteId);
     final deleteNote = ref.read(deleteNoteProvider);

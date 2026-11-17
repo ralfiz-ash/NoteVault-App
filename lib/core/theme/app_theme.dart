@@ -39,12 +39,30 @@ const darkGoldenTaupeScheme = ColorScheme(
   onError: Color(0xFF601410),
 );
 
+/// Text-coloured actions (links, text/outlined buttons) in the light theme.
+/// The palette gold (#D4AF37) is only ~2:1 on cream, too faint for text; this
+/// darker gold is ~5.8:1 (WCAG AA). Fills keep the palette gold.
+const _lightActionText = Color(0xFF7A5E00);
+
 ThemeData _build(ColorScheme scheme) {
+  final actionText = scheme.brightness == Brightness.light
+      ? _lightActionText
+      : scheme.primary;
   return ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
     scaffoldBackgroundColor: scheme.surface,
     dividerTheme: DividerThemeData(color: scheme.outline, thickness: 1),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(foregroundColor: actionText),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(foregroundColor: actionText),
+    ),
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      backgroundColor: scheme.primary,
+      foregroundColor: scheme.onPrimary,
+    ),
     appBarTheme: AppBarTheme(
       backgroundColor: scheme.surface,
       foregroundColor: scheme.onSurface,

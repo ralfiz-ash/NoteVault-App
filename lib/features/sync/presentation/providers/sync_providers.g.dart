@@ -346,7 +346,7 @@ final class SyncControllerProvider
   }
 }
 
-String _$syncControllerHash() => r'1c102853a1358b3ddf43f1036807f90927e44527';
+String _$syncControllerHash() => r'e174125d226ff56e0f02999d38ff7ec7949386cd';
 
 /// Starts uploads at the right moments; no widget ever syncs by itself.
 ///

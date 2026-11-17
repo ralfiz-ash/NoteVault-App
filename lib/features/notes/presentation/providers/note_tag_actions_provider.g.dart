@@ -131,7 +131,7 @@ final class NoteTagActionsProvider
   NoteTagActions create() => NoteTagActions();
 }
 
-String _$noteTagActionsHash() => r'9b05567d5aed8adebc95ac9ea00a32d1cdfed530';
+String _$noteTagActionsHash() => r'748a41d05e5cb9aaefc5dc420928342d53068d7d';
 
 /// Adds/removes a tag on the open note (note screen). Removing only unlinks
 /// it; the tag stays available. State: idle/done, loading, or

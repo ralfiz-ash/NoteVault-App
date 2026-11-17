@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/presentation/confirm_dialog.dart';
+import '../../../../core/presentation/content_width.dart';
 import '../../../../core/presentation/failure_snack_bar.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../folders/presentation/providers/folders_provider.dart';
@@ -93,44 +94,48 @@ class NotesListScreen extends ConsumerWidget {
         icon: const Icon(Icons.add),
         label: const Text('New note'),
       ),
-      body: Column(
-        children: [
-          const SyncStatusBanner(),
-          const NotesSearchField(),
-          const ActiveFiltersBar(),
-          Expanded(
-            child: switch (notes) {
-              AsyncError(:final error) => _ErrorView(
-                error: error,
-                onRetry: () => ref.invalidate(notesProvider),
-              ),
-              AsyncValue(:final value?) when value.isEmpty =>
-                const _EmptyView(),
-              AsyncValue(:final value?) => ListView.builder(
-                padding: const EdgeInsets.only(top: 8, bottom: 96),
-                itemCount: value.length,
-                itemBuilder: (context, index) {
-                  final note = value[index];
-                  return Dismissible(
-                    key: ValueKey(note.id),
-                    direction: DismissDirection.endToStart,
-                    background: const _DeleteBackground(),
-                    confirmDismiss: (_) => _confirmDelete(context, note),
-                    onDismissed: (_) => ref
-                        .read(deleteNoteControllerProvider.notifier)
-                        .delete(note.id),
-                    child: NoteCard(
-                      note: note,
-                      folderName: folderNames[note.folderId],
-                      onTap: () => context.push(AppRoutes.note(note.id)),
-                    ),
-                  );
-                },
-              ),
-              _ => const Center(child: CircularProgressIndicator()),
-            },
-          ),
-        ],
+      body: ContentWidth(
+        child: Column(
+          children: [
+            const SyncStatusBanner(),
+            const NotesSearchField(),
+            const ActiveFiltersBar(),
+            Expanded(
+              child: switch (notes) {
+                AsyncError(:final error) => _ErrorView(
+                  error: error,
+                  onRetry: () => ref.invalidate(notesProvider),
+                ),
+                AsyncValue(:final value?) when value.isEmpty =>
+                  const _EmptyView(),
+                AsyncValue(:final value?) => ListView.builder(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.only(top: 8, bottom: 96),
+                  itemCount: value.length,
+                  itemBuilder: (context, index) {
+                    final note = value[index];
+                    return Dismissible(
+                      key: ValueKey(note.id),
+                      direction: DismissDirection.endToStart,
+                      background: const _DeleteBackground(),
+                      confirmDismiss: (_) => _confirmDelete(context, note),
+                      onDismissed: (_) => ref
+                          .read(deleteNoteControllerProvider.notifier)
+                          .delete(note.id),
+                      child: NoteCard(
+                        note: note,
+                        folderName: folderNames[note.folderId],
+                        onTap: () => context.push(AppRoutes.note(note.id)),
+                      ),
+                    );
+                  },
+                ),
+                _ => const Center(child: CircularProgressIndicator()),
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
