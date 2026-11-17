@@ -68,6 +68,8 @@ class _TagEditorDialogState extends State<_TagEditorDialog> {
                 autofocus: widget.initialName == null,
                 decoration: const InputDecoration(labelText: 'Tag name'),
                 validator: TagValidators.name,
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) => _save(),
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: 20),

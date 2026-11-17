@@ -82,7 +82,9 @@ class TagActions extends _$TagActions {
       }) ??
       false;
 
+  /// Ignores a new request while one is running (no double submit).
   Future<T?> _run<T>(Future<T> Function() action) async {
+    if (state.isLoading) return null;
     state = const AsyncLoading();
     T? value;
     final result = await AsyncValue.guard(() async {

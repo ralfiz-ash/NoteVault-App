@@ -143,6 +143,7 @@ class SyncController extends _$SyncController {
   /// Uploads queued changes now (if signed in and online).
   Future<void> syncNow() async {
     _timer?.cancel();
+    if (state.phase == SyncPhase.syncing) return; // already running
     final userId = ref.read(currentUserIdProvider).value;
     if (userId == null || _offline) return;
 

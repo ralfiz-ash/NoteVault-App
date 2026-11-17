@@ -73,10 +73,11 @@ class TagChip extends StatelessWidget {
               message: 'Remove $label',
               child: InkResponse(
                 onTap: onDeleted,
-                radius: 14,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4),
-                  child: Icon(Icons.close, size: 14),
+                radius: 20,
+                // 40 x 40 touch target around a small icon.
+                child: const SizedBox.square(
+                  dimension: 40,
+                  child: Icon(Icons.close, size: 16),
                 ),
               ),
             ),

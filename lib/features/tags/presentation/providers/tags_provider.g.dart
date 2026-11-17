@@ -324,7 +324,7 @@ final class TagActionsProvider
   TagActions create() => TagActions();
 }
 
-String _$tagActionsHash() => r'ed6e1964f9034e546124e87af0947bb7f0a089fc';
+String _$tagActionsHash() => r'92bbbe759c2d0ef728e82a05ad9195df2d023f0d';
 
 /// Create / edit / delete tags from the tags screen. State:
 /// `AsyncData(null)` idle or done, `AsyncLoading`, `AsyncError(Failure)`.

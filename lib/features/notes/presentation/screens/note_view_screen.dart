@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/presentation/confirm_dialog.dart';
+import '../../../../core/presentation/content_width.dart';
 import '../../../../core/presentation/date_formatting.dart';
 import '../../../folders/presentation/providers/folders_provider.dart';
 import '../../domain/entities/note.dart';
@@ -14,6 +15,7 @@ import '../providers/delete_note_controller.dart';
 import '../../../../core/presentation/failure_snack_bar.dart';
 import '../providers/note_provider.dart';
 import '../providers/note_tag_actions_provider.dart';
+import '../providers/notes_provider.dart';
 import '../widgets/add_tag_dialog.dart';
 import '../widgets/folder_label.dart';
 import '../widgets/tag_chips.dart';
@@ -67,11 +69,16 @@ class NoteViewScreen extends ConsumerWidget {
         ],
       ),
       body: switch (note) {
-        AsyncData(:final value) => _NoteDetails(note: value),
+        AsyncData(:final value) => ContentWidth(
+          child: _NoteDetails(note: value),
+        ),
         AsyncError(:final error) => _Unavailable(
           message: error is NotFoundFailure
               ? 'This note no longer exists.'
               : 'Unable to load this note.',
+          onRetry: error is NotFoundFailure
+              ? null
+              : () => ref.invalidate(notesProvider),
         ),
         _ => const Center(child: CircularProgressIndicator()),
       },
@@ -142,9 +149,10 @@ class _NoteDetails extends ConsumerWidget {
 }
 
 class _Unavailable extends StatelessWidget {
-  const _Unavailable({required this.message});
+  const _Unavailable({required this.message, this.onRetry});
 
   final String message;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -154,7 +162,11 @@ class _Unavailable extends StatelessWidget {
         children: [
           Text(message),
           const SizedBox(height: 16),
-          FilledButton(
+          if (onRetry != null) ...[
+            FilledButton(onPressed: onRetry, child: const Text('Retry')),
+            const SizedBox(height: 8),
+          ],
+          TextButton(
             onPressed: () => context.go(AppRoutes.home),
             child: const Text('Back to notes'),
           ),

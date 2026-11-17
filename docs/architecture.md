@@ -525,6 +525,30 @@ filteredNotesProvider <- noteQuery <- noteSortSettingProvider
 - **Known limitation**: before sign-in (login screen) the theme follows the
   system; the user's theme applies once they are signed in.
 
+## UI hardening (Phase 13)
+
+The review checklist and fixes are in `docs/ux-review.md`. Conventions that
+now apply to every screen:
+
+- **Async states**: loading, data, empty (with a next step), filtered empty
+  (different message), and error with a Retry that `ref.invalidate`s the
+  provider. A failed refresh keeps showing the last good data.
+- **Mutations**: the notifier ignores a new request while one is running
+  (no double submit); screens show progress (button spinner or a thin bar)
+  and a short confirmation ("Folder created", "Changes saved") or a failure
+  message that says the data is safe. Side effects run in `ref.listen` or
+  in the callback that started the action, never in `build`.
+- **Editor**: leaving with changes offers Save / Discard / Stay; a failed
+  save keeps the input.
+- **Layout**: page content is limited to 760 px wide (`ContentWidth`);
+  sheets and dialogs scroll; all screens are tested at 320 x 568 with 1.5x
+  text in light and dark.
+- **Keyboard**: scrolling dismisses it; fields use matching keyboard types
+  and done/next actions.
+- **Accessibility**: light-theme text actions use a darker gold (5.8:1 on
+  cream; tested); small icon buttons have 40 px targets and tooltips;
+  colours are named for screen readers and tags always show their names.
+
 ## Adding a feature
 
 1. Create `features/<name>/{domain,data,presentation}` with the subfolders above.

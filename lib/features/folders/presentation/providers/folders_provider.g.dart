@@ -334,7 +334,7 @@ final class FolderActionsProvider
   FolderActions create() => FolderActions();
 }
 
-String _$folderActionsHash() => r'ca94c1b18b19345202c55635590e3b85fb97c3ea';
+String _$folderActionsHash() => r'9da661b020f4dc951a58e8086d9612de32e7de07';
 
 /// Create / rename / delete folders from the folders screen. State:
 /// `AsyncData(null)` idle or done, `AsyncLoading`, `AsyncError(Failure)`.

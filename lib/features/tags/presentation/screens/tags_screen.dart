@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/presentation/confirm_dialog.dart';
+import '../../../../core/presentation/content_width.dart';
+import '../../../../core/presentation/info_snack_bar.dart';
 import '../../../../core/presentation/failure_snack_bar.dart';
 import '../../../../core/presentation/tag_chip.dart';
 import '../../domain/entities/tag.dart';
@@ -16,9 +18,12 @@ class TagsScreen extends ConsumerWidget {
   Future<void> _create(BuildContext context, WidgetRef ref) async {
     final result = await showTagEditorDialog(context);
     if (result == null) return;
-    await ref
+    final tag = await ref
         .read(tagActionsProvider.notifier)
         .create(name: result.name, colorValue: result.colorValue);
+    if (tag != null && context.mounted) {
+      showInfoSnackBar(context, 'Tag "${tag.name}" created');
+    }
   }
 
   Future<void> _edit(BuildContext context, WidgetRef ref, Tag tag) async {
@@ -28,9 +33,12 @@ class TagsScreen extends ConsumerWidget {
       initialColor: tag.colorValue,
     );
     if (result == null) return;
-    await ref
+    final saved = await ref
         .read(tagActionsProvider.notifier)
         .edit(tag.copyWith(name: result.name, colorValue: result.colorValue));
+    if (saved != null && context.mounted) {
+      showInfoSnackBar(context, 'Tag "${saved.name}" saved');
+    }
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref, Tag tag) async {
@@ -42,7 +50,11 @@ class TagsScreen extends ConsumerWidget {
       confirmLabel: 'Delete',
       destructive: true,
     );
-    if (confirmed) await ref.read(tagActionsProvider.notifier).delete(tag.id);
+    if (!confirmed) return;
+    final deleted = await ref.read(tagActionsProvider.notifier).delete(tag.id);
+    if (deleted && context.mounted) {
+      showInfoSnackBar(context, 'Tag deleted. The notes are kept.');
+    }
   }
 
   @override
@@ -54,47 +66,77 @@ class TagsScreen extends ConsumerWidget {
     });
     final tags = ref.watch(tagsProvider);
     final counts = ref.watch(tagNoteCountsProvider);
+    final busy = ref.watch(tagActionsProvider).isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tags')),
+      appBar: AppBar(
+        title: const Text('Tags'),
+        bottom: busy
+            ? const PreferredSize(
+                preferredSize: Size.fromHeight(2),
+                child: LinearProgressIndicator(minHeight: 2),
+              )
+            : null,
+      ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _create(context, ref),
+        onPressed: busy ? null : () => _create(context, ref),
         icon: const Icon(Icons.add),
         label: const Text('New tag'),
       ),
-      body: switch (tags) {
-        AsyncValue(:final value?) when value.isEmpty => const Center(
-          child: Text('No tags yet'),
-        ),
-        AsyncValue(:final value?) => ListView(
-          padding: const EdgeInsets.only(bottom: 96),
-          children: [
-            for (final tag in value)
-              ListTile(
-                key: ValueKey(tag.id),
-                leading: CircleAvatar(
-                  radius: 10,
-                  backgroundColor: tagColor(tag.colorValue),
-                ),
-                title: TagChip(
-                  label: tag.name,
-                  colorValue: tag.colorValue,
-                ).alignLeft(),
-                subtitle: Text(
-                  _notesLabel(counts[tag.name.toLowerCase()] ?? 0),
-                ),
-                onTap: () => _edit(context, ref, tag),
-                trailing: IconButton(
-                  tooltip: 'Delete ${tag.name}',
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => _delete(context, ref, tag),
-                ),
+      body: ContentWidth(
+        child: switch (tags) {
+          AsyncValue(:final value?) when value.isEmpty => const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: Text(
+                'No tags yet. Tap "New tag" to create one with a colour, or add '
+                'tags while editing a note.',
+                textAlign: TextAlign.center,
               ),
-          ],
-        ),
-        AsyncError() => const Center(child: Text('Unable to load tags.')),
-        _ => const Center(child: CircularProgressIndicator()),
-      },
+            ),
+          ),
+          AsyncValue(:final value?) => ListView(
+            padding: const EdgeInsets.only(bottom: 96),
+            children: [
+              for (final tag in value)
+                ListTile(
+                  key: ValueKey(tag.id),
+                  leading: CircleAvatar(
+                    radius: 10,
+                    backgroundColor: tagColor(tag.colorValue),
+                  ),
+                  title: TagChip(
+                    label: tag.name,
+                    colorValue: tag.colorValue,
+                  ).alignLeft(),
+                  subtitle: Text(
+                    _notesLabel(counts[tag.name.toLowerCase()] ?? 0),
+                  ),
+                  onTap: () => _edit(context, ref, tag),
+                  trailing: IconButton(
+                    tooltip: 'Delete ${tag.name}',
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: () => _delete(context, ref, tag),
+                  ),
+                ),
+            ],
+          ),
+          AsyncError() => Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Unable to load tags.'),
+                const SizedBox(height: 12),
+                FilledButton(
+                  onPressed: () => ref.invalidate(tagsProvider),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+          _ => const Center(child: CircularProgressIndicator()),
+        },
+      ),
     );
   }
 }

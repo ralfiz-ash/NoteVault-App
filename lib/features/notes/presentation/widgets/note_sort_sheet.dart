@@ -28,7 +28,8 @@ class _NoteSortSheet extends ConsumerWidget {
     };
 
     return SafeArea(
-      child: Padding(
+      // Scrolls on short screens / large text instead of overflowing.
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,

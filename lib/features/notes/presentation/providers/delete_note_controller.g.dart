@@ -64,7 +64,7 @@ final class DeleteNoteControllerProvider
 }
 
 String _$deleteNoteControllerHash() =>
-    r'223becf078b9c7ba55e7c3c6a101cd663627270f';
+    r'720465e9f4d8e1ff6ad109f564c0c981d5c2dee9';
 
 /// Deletes notes optimistically.
 ///

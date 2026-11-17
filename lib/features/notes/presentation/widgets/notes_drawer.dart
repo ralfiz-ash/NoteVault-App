@@ -81,6 +81,8 @@ class NotesDrawer extends ConsumerWidget {
               () => context.push(AppRoutes.folders),
               'Manage folders',
             ),
+            if (folders.isEmpty)
+              const ListTile(dense: true, title: Text('No folders yet')),
             for (final folder in folders)
               _CountTile(
                 icon: Icons.folder_outlined,

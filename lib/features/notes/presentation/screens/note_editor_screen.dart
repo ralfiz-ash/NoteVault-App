@@ -4,13 +4,15 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/errors/failure.dart';
-import '../../../../core/presentation/confirm_dialog.dart';
+import '../../../../core/presentation/content_width.dart';
+import '../../../../core/presentation/info_snack_bar.dart';
 import '../../../../core/presentation/failure_snack_bar.dart';
 import '../../domain/entities/note.dart';
 import '../../domain/entities/note_draft.dart';
 import '../../domain/validation/note_validators.dart';
 import '../providers/create_note_controller.dart';
 import '../providers/note_provider.dart';
+import '../providers/notes_provider.dart';
 import '../providers/update_note_controller.dart';
 import '../widgets/folder_picker.dart';
 import '../widgets/tags_input.dart';
@@ -44,10 +46,25 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   NoteDraft? _baseline;
   Note? _original;
 
+  bool _initialized = false;
+
   @override
   void initState() {
     super.initState();
-    if (widget.isNew) _baseline = const NoteDraft();
+    if (widget.isNew) {
+      _baseline = const NoteDraft();
+    } else {
+      // Fill the form once, when the note first arrives (later updates of
+      // the note do not overwrite what the user is typing).
+      ref.listenManual(noteProvider(widget.noteId!), (_, next) {
+        if (_original != null || !mounted) return;
+        if (next case AsyncData(:final value)) {
+          _load(value);
+          if (_initialized) setState(() {});
+        }
+      }, fireImmediately: true);
+    }
+    _initialized = true;
   }
 
   @override
@@ -92,6 +109,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           .create(draft);
       if (created == null || !mounted) return;
       setState(() => _baseline = draft); // saved: nothing to warn about
+      showInfoSnackBar(context, 'Note created');
       context.pushReplacement(AppRoutes.note(created.id));
     } else {
       final original = _original;
@@ -101,22 +119,48 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           .save(original, draft);
       if (saved == null || !mounted) return;
       setState(() => _baseline = draft);
+      showInfoSnackBar(context, 'Changes saved');
       context.pop();
     }
   }
 
   Future<void> _confirmLeave() async {
-    final discard = await showConfirmDialog(
-      context,
-      title: 'Discard changes?',
-      message: 'You have unsaved changes. Do you want to discard them?',
-      confirmLabel: 'Discard',
-      cancelLabel: 'Stay',
-      destructive: true,
+    final choice = await showDialog<_LeaveChoice>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Unsaved changes'),
+        content: const Text(
+          'You have unsaved changes. Do you want to discard them?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(_LeaveChoice.stay),
+            child: const Text('Stay'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(_LeaveChoice.discard),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Discard'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(_LeaveChoice.save),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
     );
-    if (!discard || !mounted) return;
-    setState(() => _baseline = _draft); // allow the pop below
-    Navigator.of(context).pop();
+    if (!mounted) return;
+    switch (choice) {
+      case _LeaveChoice.discard:
+        setState(() => _baseline = _draft); // allow the pop below
+        Navigator.of(context).pop();
+      case _LeaveChoice.save:
+        await _save(); // leaves on success, stays (with data) on failure
+      case _LeaveChoice.stay || null:
+        break;
+    }
   }
 
   @override
@@ -138,14 +182,24 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     Widget? unavailable;
     if (!widget.isNew) {
       switch (ref.watch(noteProvider(widget.noteId!))) {
-        case AsyncData(:final value) when _original == null:
-          _load(value);
         case AsyncError(:final error) when _original == null:
           unavailable = Center(
-            child: Text(
-              error is NotFoundFailure
-                  ? 'This note no longer exists.'
-                  : 'Unable to load this note.',
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  error is NotFoundFailure
+                      ? 'This note no longer exists.'
+                      : 'Unable to load this note.',
+                ),
+                if (error is! NotFoundFailure) ...[
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: () => ref.invalidate(notesProvider),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ],
             ),
           );
         case AsyncLoading() when _original == null:
@@ -184,57 +238,63 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         ),
         body:
             unavailable ??
-            Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                children: [
-                  TextFormField(
-                    key: const Key('note-title'),
-                    controller: _title,
-                    enabled: !saving,
-                    autofocus: widget.isNew,
-                    textCapitalization: TextCapitalization.sentences,
-                    textInputAction: TextInputAction.next,
-                    validator: NoteValidators.title,
-                    onChanged: (_) => _changed(),
-                    decoration: const InputDecoration(
-                      labelText: 'Title',
-                      border: OutlineInputBorder(),
+            ContentWidth(
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                  children: [
+                    TextFormField(
+                      key: const Key('note-title'),
+                      controller: _title,
+                      enabled: !saving,
+                      autofocus: widget.isNew,
+                      textCapitalization: TextCapitalization.sentences,
+                      textInputAction: TextInputAction.next,
+                      validator: NoteValidators.title,
+                      onChanged: (_) => _changed(),
+                      decoration: const InputDecoration(
+                        labelText: 'Title',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  FolderPicker(
-                    folderId: _folderId,
-                    enabled: !saving,
-                    onChanged: (id) => setState(() => _folderId = id),
-                  ),
-                  const SizedBox(height: 16),
-                  TagsInput(
-                    tags: _tags,
-                    enabled: !saving,
-                    onChanged: (tags) => setState(() => _tags = tags),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    key: const Key('note-content'),
-                    controller: _content,
-                    enabled: !saving,
-                    minLines: 8,
-                    maxLines: null,
-                    keyboardType: TextInputType.multiline,
-                    textCapitalization: TextCapitalization.sentences,
-                    onChanged: (_) => _changed(),
-                    decoration: const InputDecoration(
-                      labelText: 'Content',
-                      alignLabelWithHint: true,
-                      border: OutlineInputBorder(),
+                    const SizedBox(height: 16),
+                    FolderPicker(
+                      folderId: _folderId,
+                      enabled: !saving,
+                      onChanged: (id) => setState(() => _folderId = id),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    TagsInput(
+                      tags: _tags,
+                      enabled: !saving,
+                      onChanged: (tags) => setState(() => _tags = tags),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      key: const Key('note-content'),
+                      controller: _content,
+                      enabled: !saving,
+                      minLines: 8,
+                      maxLines: null,
+                      keyboardType: TextInputType.multiline,
+                      textCapitalization: TextCapitalization.sentences,
+                      onChanged: (_) => _changed(),
+                      decoration: const InputDecoration(
+                        labelText: 'Content',
+                        alignLabelWithHint: true,
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
       ),
     );
   }
 }
+
+enum _LeaveChoice { stay, discard, save }
