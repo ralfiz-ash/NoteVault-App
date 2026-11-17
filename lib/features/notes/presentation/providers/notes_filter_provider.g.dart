@@ -245,7 +245,7 @@ final class NoteQueryProvider
   }
 }
 
-String _$noteQueryHash() => r'add2cbd9ec4d164012a67b4da9ab6748bfa16f07';
+String _$noteQueryHash() => r'52862b024c4f28ffce642d857f6c706531a142d1';
 
 /// THE list the notes screen shows: the user's notes (minus deletions in
 /// progress) filtered and sorted by [noteQueryProvider] in one pass. Derived

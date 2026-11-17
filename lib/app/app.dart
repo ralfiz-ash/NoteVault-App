@@ -18,9 +18,7 @@ class NoteVaultApp extends ConsumerWidget {
     ref.listen(syncControllerProvider, (_, _) {});
     final router = ref.watch(appRouterProvider);
     final config = ref.watch(appConfigProvider);
-    final themeMode = ref.watch(
-      settingsProvider.select((settings) => settings.themeMode),
-    );
+    final themeMode = ref.watch(themeModePreferenceProvider);
 
     return MaterialApp.router(
       title: config.appName,

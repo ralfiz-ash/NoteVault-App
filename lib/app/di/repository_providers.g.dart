@@ -296,3 +296,59 @@ final class TagRepositoryProvider
 }
 
 String _$tagRepositoryHash() => r'a32f8deaa43fb52f9310e9436fe7fd55a287a210';
+
+/// The signed-in user's settings (in their own database, so each account
+/// has its own settings).
+
+@ProviderFor(settingsRepository)
+final settingsRepositoryProvider = SettingsRepositoryProvider._();
+
+/// The signed-in user's settings (in their own database, so each account
+/// has its own settings).
+
+final class SettingsRepositoryProvider
+    extends
+        $FunctionalProvider<
+          SettingsRepository,
+          SettingsRepository,
+          SettingsRepository
+        >
+    with $Provider<SettingsRepository> {
+  /// The signed-in user's settings (in their own database, so each account
+  /// has its own settings).
+  SettingsRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'settingsRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$settingsRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<SettingsRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SettingsRepository create(Ref ref) {
+    return settingsRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SettingsRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SettingsRepository>(value),
+    );
+  }
+}
+
+String _$settingsRepositoryHash() =>
+    r'88b8d5d67f1bbf7403d77edf280f8aff6971ec85';

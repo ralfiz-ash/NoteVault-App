@@ -14,6 +14,7 @@ import 'package:notevalult/core/logging/app_logger.dart';
 import 'package:notevalult/features/auth/domain/entities/app_user.dart';
 import 'package:notevalult/features/folders/domain/repositories/folder_repository.dart';
 import 'package:notevalult/features/notes/domain/repositories/note_repository.dart';
+import 'package:notevalult/features/settings/domain/repositories/settings_repository.dart';
 import 'package:notevalult/features/sync/domain/repositories/sync_repository.dart';
 import 'package:notevalult/features/tags/domain/repositories/tag_repository.dart';
 
@@ -66,7 +67,11 @@ List<Override> appTestOverrides({
   TagRepository? tags,
   FakeConnectivityRepository? connectivity,
   SyncRepository? sync,
+  SettingsRepository? settings,
 }) => [
+  settingsRepositoryProvider.overrideWithValue(
+    settings ?? FakeSettingsRepository(),
+  ),
   syncRepositoryProvider.overrideWithValue(sync ?? FakeSyncRepository()),
   folderRepositoryProvider.overrideWithValue(folders ?? FakeFolderRepository()),
   tagRepositoryProvider.overrideWithValue(tags ?? FakeTagRepository()),

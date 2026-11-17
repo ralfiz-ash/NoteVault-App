@@ -91,7 +91,7 @@ NoteQuery noteQuery(Ref ref) {
     search: ref.watch(noteSearchControllerProvider),
     folder: filter.folder,
     tagName: tagName,
-    sort: ref.watch(settingsProvider.select((s) => s.noteSort)),
+    sort: ref.watch(noteSortSettingProvider),
   );
 }
 
