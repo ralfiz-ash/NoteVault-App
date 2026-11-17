@@ -240,17 +240,19 @@ final class DeleteFolderProvider
 String _$deleteFolderHash() => r'd2115f036f5d1e3551a5f8cb6dd257955dcb7b21';
 
 /// Number of notes per folder id; the `null` key counts notes in no folder.
-/// Computed in one pass over the notes already in memory (no query per
-/// folder), so it changes whenever a note is created, moved or deleted, or a
-/// folder is deleted.
+/// Derived in one pass from the same notes the list shows
+/// (`visibleNotesProvider`), never kept as separate counts, so it changes
+/// whenever a note is created, moved or deleted, or a folder is deleted, and
+/// can never disagree with the list.
 
 @ProviderFor(folderNoteCounts)
 final folderNoteCountsProvider = FolderNoteCountsProvider._();
 
 /// Number of notes per folder id; the `null` key counts notes in no folder.
-/// Computed in one pass over the notes already in memory (no query per
-/// folder), so it changes whenever a note is created, moved or deleted, or a
-/// folder is deleted.
+/// Derived in one pass from the same notes the list shows
+/// (`visibleNotesProvider`), never kept as separate counts, so it changes
+/// whenever a note is created, moved or deleted, or a folder is deleted, and
+/// can never disagree with the list.
 
 final class FolderNoteCountsProvider
     extends
@@ -261,9 +263,10 @@ final class FolderNoteCountsProvider
         >
     with $Provider<Map<String?, int>> {
   /// Number of notes per folder id; the `null` key counts notes in no folder.
-  /// Computed in one pass over the notes already in memory (no query per
-  /// folder), so it changes whenever a note is created, moved or deleted, or a
-  /// folder is deleted.
+  /// Derived in one pass from the same notes the list shows
+  /// (`visibleNotesProvider`), never kept as separate counts, so it changes
+  /// whenever a note is created, moved or deleted, or a folder is deleted, and
+  /// can never disagree with the list.
   FolderNoteCountsProvider._()
     : super(
         from: null,
@@ -298,7 +301,7 @@ final class FolderNoteCountsProvider
   }
 }
 
-String _$folderNoteCountsHash() => r'9da44bb575ea2d867183642327e3409082dcca29';
+String _$folderNoteCountsHash() => r'e75b58d5b6f64b5d480ed0c6d9ec18265a04feb4';
 
 /// Create / rename / delete folders from the folders screen. State:
 /// `AsyncData(null)` idle or done, `AsyncLoading`, `AsyncError(Failure)`.

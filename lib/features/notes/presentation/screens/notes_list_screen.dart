@@ -11,10 +11,13 @@ import '../../../folders/presentation/providers/folders_provider.dart';
 import '../../domain/entities/note.dart';
 import '../providers/delete_note_controller.dart';
 import '../providers/notes_provider.dart';
-import '../../../tags/presentation/providers/tags_provider.dart';
 import '../providers/notes_filter_provider.dart';
-import '../state/notes_filter.dart';
+import '../../domain/entities/note_query.dart';
+import '../providers/visible_notes_provider.dart';
+import '../widgets/active_filters_bar.dart';
+import '../widgets/note_sort_sheet.dart';
 import '../widgets/notes_drawer.dart';
+import '../widgets/notes_search_field.dart';
 import '../widgets/note_card.dart';
 
 class NotesListScreen extends ConsumerWidget {
@@ -45,27 +48,18 @@ class NotesListScreen extends ConsumerWidget {
     });
 
     final notes = ref.watch(filteredNotesProvider);
-    final filter = ref.watch(notesFilterControllerProvider);
     final folderNames = ref.watch(folderNamesProvider);
-    final title = switch (filter) {
-      AllNotes() => 'Notes',
-      FolderFilter(folderId: null) => 'No folder',
-      FolderFilter(:final folderId) => folderNames[folderId] ?? 'Folder',
-      TagFilter(:final tagId) =>
-        ref
-                .watch(tagsProvider)
-                .value
-                ?.where((t) => t.id == tagId)
-                .map((t) => '#${t.name}')
-                .firstOrNull ??
-            'Tag',
-    };
 
     return Scaffold(
       drawer: const NotesDrawer(),
       appBar: AppBar(
-        title: Text(title),
+        title: const Text('Notes'),
         actions: [
+          IconButton(
+            tooltip: 'Sort',
+            icon: const Icon(Icons.sort),
+            onPressed: () => showNoteSortSheet(context),
+          ),
           IconButton(
             tooltip: 'Sign out',
             icon: const Icon(Icons.logout),
@@ -79,53 +73,64 @@ class NotesListScreen extends ConsumerWidget {
         icon: const Icon(Icons.add),
         label: const Text('New note'),
       ),
-      body: switch (notes) {
-        AsyncError(:final error) => _ErrorView(
-          error: error,
-          onRetry: () => ref.invalidate(notesProvider),
-        ),
-        AsyncValue(:final value?) when value.isEmpty => _EmptyView(
-          filtered: filter is! AllNotes,
-          onShowAll: () => ref
-              .read(notesFilterControllerProvider.notifier)
-              .show(const AllNotes()),
-        ),
-        AsyncValue(:final value?) => ListView.builder(
-          padding: const EdgeInsets.only(top: 8, bottom: 96),
-          itemCount: value.length,
-          itemBuilder: (context, index) {
-            final note = value[index];
-            return Dismissible(
-              key: ValueKey(note.id),
-              direction: DismissDirection.endToStart,
-              background: const _DeleteBackground(),
-              confirmDismiss: (_) => _confirmDelete(context, note),
-              onDismissed: (_) => ref
-                  .read(deleteNoteControllerProvider.notifier)
-                  .delete(note.id),
-              child: NoteCard(
-                note: note,
-                folderName: folderNames[note.folderId],
-                onTap: () => context.push(AppRoutes.note(note.id)),
+      body: Column(
+        children: [
+          const NotesSearchField(),
+          const ActiveFiltersBar(),
+          Expanded(
+            child: switch (notes) {
+              AsyncError(:final error) => _ErrorView(
+                error: error,
+                onRetry: () => ref.invalidate(notesProvider),
               ),
-            );
-          },
-        ),
-        _ => const Center(child: CircularProgressIndicator()),
-      },
+              AsyncValue(:final value?) when value.isEmpty =>
+                const _EmptyView(),
+              AsyncValue(:final value?) => ListView.builder(
+                padding: const EdgeInsets.only(top: 8, bottom: 96),
+                itemCount: value.length,
+                itemBuilder: (context, index) {
+                  final note = value[index];
+                  return Dismissible(
+                    key: ValueKey(note.id),
+                    direction: DismissDirection.endToStart,
+                    background: const _DeleteBackground(),
+                    confirmDismiss: (_) => _confirmDelete(context, note),
+                    onDismissed: (_) => ref
+                        .read(deleteNoteControllerProvider.notifier)
+                        .delete(note.id),
+                    child: NoteCard(
+                      note: note,
+                      folderName: folderNames[note.folderId],
+                      onTap: () => context.push(AppRoutes.note(note.id)),
+                    ),
+                  );
+                },
+              ),
+              _ => const Center(child: CircularProgressIndicator()),
+            },
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _EmptyView extends StatelessWidget {
-  const _EmptyView({required this.filtered, required this.onShowAll});
-
-  final bool filtered;
-  final VoidCallback onShowAll;
+/// Tells "you have no notes" apart from "nothing matches the filters".
+class _EmptyView extends ConsumerWidget {
+  const _EmptyView();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final hasNotes = ref.watch(
+      visibleNotesProvider.select((n) => n.value?.isNotEmpty ?? false),
+    );
+    final query = ref.watch(noteQueryProvider);
+
+    final (title, message) = !hasNotes
+        ? ('No notes yet', 'Tap "New note" to write your first one.')
+        : ('No notes found', _noMatchMessage(query));
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -133,30 +138,27 @@ class _EmptyView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.sticky_note_2_outlined,
+              hasNotes ? Icons.search_off : Icons.sticky_note_2_outlined,
               size: 64,
               color: theme.colorScheme.primary,
             ),
             const SizedBox(height: 16),
-            Text(
-              filtered ? 'No notes here' : 'No notes yet',
-              style: theme.textTheme.titleLarge,
-            ),
+            Text(title, style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(
-              filtered
-                  ? 'No notes match this folder or tag.'
-                  : 'Tap "New note" to write your first one.',
+              message,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            if (filtered) ...[
+            if (hasNotes && query.folder is! AnyFolder ||
+                hasNotes && query.tagName != null) ...[
               const SizedBox(height: 16),
               TextButton(
-                onPressed: onShowAll,
-                child: const Text('Show all notes'),
+                onPressed: () =>
+                    ref.read(notesFilterControllerProvider.notifier).clear(),
+                child: const Text('Clear filters'),
               ),
             ],
           ],
@@ -164,6 +166,23 @@ class _EmptyView extends StatelessWidget {
       ),
     );
   }
+}
+
+String _noMatchMessage(NoteQuery query) {
+  final onlySearch =
+      query.hasSearch && query.folder is AnyFolder && query.tagName == null;
+  if (onlySearch) return 'No notes match "${query.search}".';
+  if (!query.hasSearch && query.tagName == null) {
+    return query.folder is NoFolder
+        ? 'Every note is in a folder.'
+        : 'No notes in this folder.';
+  }
+  if (!query.hasSearch && query.folder is AnyFolder) {
+    return 'No notes with this tag.';
+  }
+  return query.hasSearch
+      ? 'No notes match "${query.search}" with the current filters.'
+      : 'No notes match the current filters.';
 }
 
 class _ErrorView extends StatelessWidget {

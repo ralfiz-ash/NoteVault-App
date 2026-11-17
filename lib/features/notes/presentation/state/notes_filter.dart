@@ -1,40 +1,27 @@
-/// Which notes the list shows.
-sealed class NotesFilter {
-  const NotesFilter();
-}
+import '../../domain/entities/note_query.dart';
 
-class AllNotes extends NotesFilter {
-  const AllNotes();
+/// The list's folder and tag selection (search text and sort live in their
+/// own providers). Both can be active at once.
+class NotesFilterState {
+  const NotesFilterState({this.folder = const AnyFolder(), this.tagId});
 
-  @override
-  bool operator ==(Object other) => other is AllNotes;
+  final FolderScope folder;
+  final String? tagId;
 
-  @override
-  int get hashCode => 0;
-}
+  bool get isActive => folder is! AnyFolder || tagId != null;
 
-/// Notes in one folder, or ([folderId] == null) notes in no folder.
-class FolderFilter extends NotesFilter {
-  const FolderFilter(this.folderId);
-
-  final String? folderId;
+  NotesFilterState copyWith({FolderScope? folder, String? Function()? tagId}) =>
+      NotesFilterState(
+        folder: folder ?? this.folder,
+        tagId: tagId != null ? tagId() : this.tagId,
+      );
 
   @override
   bool operator ==(Object other) =>
-      other is FolderFilter && other.folderId == folderId;
+      other is NotesFilterState &&
+      other.folder == folder &&
+      other.tagId == tagId;
 
   @override
-  int get hashCode => Object.hash('folder', folderId);
-}
-
-class TagFilter extends NotesFilter {
-  const TagFilter(this.tagId);
-
-  final String tagId;
-
-  @override
-  bool operator ==(Object other) => other is TagFilter && other.tagId == tagId;
-
-  @override
-  int get hashCode => Object.hash('tag', tagId);
+  int get hashCode => Object.hash(folder, tagId);
 }

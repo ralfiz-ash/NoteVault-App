@@ -9,7 +9,7 @@ import '../../domain/entities/folder.dart';
 import '../../domain/usecases/create_folder.dart';
 import '../../domain/usecases/observe_folders.dart';
 import '../../domain/usecases/rename_folder.dart';
-import '../../../notes/presentation/providers/notes_provider.dart';
+import '../../../notes/presentation/providers/visible_notes_provider.dart';
 
 part 'folders_provider.g.dart';
 
@@ -50,13 +50,14 @@ DeleteFolder deleteFolder(Ref ref) =>
     DeleteFolder(ref.watch(folderRepositoryProvider));
 
 /// Number of notes per folder id; the `null` key counts notes in no folder.
-/// Computed in one pass over the notes already in memory (no query per
-/// folder), so it changes whenever a note is created, moved or deleted, or a
-/// folder is deleted.
+/// Derived in one pass from the same notes the list shows
+/// (`visibleNotesProvider`), never kept as separate counts, so it changes
+/// whenever a note is created, moved or deleted, or a folder is deleted, and
+/// can never disagree with the list.
 @riverpod
 Map<String?, int> folderNoteCounts(Ref ref) {
   final counts = <String?, int>{};
-  for (final note in ref.watch(notesProvider).value ?? const []) {
+  for (final note in ref.watch(visibleNotesProvider).value ?? const []) {
     counts[note.folderId] = (counts[note.folderId] ?? 0) + 1;
   }
   return counts;

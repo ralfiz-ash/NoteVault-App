@@ -5,7 +5,7 @@ import '../../../../app/di/database_providers.dart';
 import '../../../../app/di/repository_providers.dart';
 import '../../../../app/di/session_providers.dart';
 import '../../../../core/usecase/usecase.dart';
-import '../../../notes/presentation/providers/notes_provider.dart';
+import '../../../notes/presentation/providers/visible_notes_provider.dart';
 import '../../domain/entities/tag.dart';
 import '../../domain/usecases/create_tag.dart';
 import '../../domain/usecases/observe_tags.dart';
@@ -35,12 +35,12 @@ Map<String, Tag> tagsByName(Ref ref) => {
     tag.name.toLowerCase(): tag,
 };
 
-/// Lower-case tag name -> number of notes using it (one pass over the notes;
-/// no query per tag).
+/// Lower-case tag name -> number of notes using it. Derived in one pass from
+/// the same notes the list shows (no query per tag, no stored counts).
 @riverpod
 Map<String, int> tagNoteCounts(Ref ref) {
   final counts = <String, int>{};
-  for (final note in ref.watch(notesProvider).value ?? const []) {
+  for (final note in ref.watch(visibleNotesProvider).value ?? const []) {
     for (final tag in note.tags) {
       final key = tag.toLowerCase();
       counts[key] = (counts[key] ?? 0) + 1;

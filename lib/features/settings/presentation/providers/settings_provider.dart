@@ -2,11 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../app/di/session_providers.dart';
+import '../../../notes/domain/entities/note_sort.dart';
 import '../../domain/entities/app_settings.dart';
 
 part 'settings_provider.g.dart';
 
-/// App settings (theme mode and note sort order) and how to change them.
+/// App settings (theme mode and notes sort) and how to change them.
 ///
 /// Held in memory for now; loading/saving through `SettingsRepository` is
 /// added in the Settings phase without changing this provider's API.
@@ -28,6 +29,6 @@ class Settings extends _$Settings {
   void setThemeMode(ThemeModePreference mode) =>
       state = state.copyWith(themeMode: mode);
 
-  void setSortOrder(NoteSortOrder order) =>
-      state = state.copyWith(sortOrder: order);
+  /// The notes list order (also used by the list's sort menu).
+  void setNoteSort(NoteSort sort) => state = state.copyWith(noteSort: sort);
 }
