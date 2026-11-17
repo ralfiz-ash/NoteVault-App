@@ -18,7 +18,7 @@ class _NoteSortSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sort = ref.watch(settingsProvider.select((s) => s.noteSort));
+    final sort = ref.watch(noteSortSettingProvider);
     void set(NoteSort value) =>
         ref.read(settingsProvider.notifier).setNoteSort(value);
 

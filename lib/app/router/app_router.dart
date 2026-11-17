@@ -11,6 +11,7 @@ import '../../features/folders/presentation/screens/folders_screen.dart';
 import '../../features/notes/presentation/screens/note_editor_screen.dart';
 import '../../features/notes/presentation/screens/note_view_screen.dart';
 import '../../features/notes/presentation/screens/notes_list_screen.dart';
+import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/tags/presentation/screens/tags_screen.dart';
 import '../splash_screen.dart';
 import 'app_routes.dart';
@@ -47,6 +48,10 @@ GoRouter appRouter(Ref ref) {
           GoRoute(
             path: 'tags',
             builder: (context, state) => const TagsScreen(),
+          ),
+          GoRoute(
+            path: 'settings',
+            builder: (context, state) => const SettingsScreen(),
           ),
           // Declared before 'notes/:id' so "new" is not taken as an id.
           GoRoute(

@@ -494,6 +494,37 @@ SyncRepositoryImpl (upload: queue)          SyncRepositoryImpl.followRemoteChang
   after an error. Widgets never see Firestore.
 - **Security rules** allow the new `version` and `folderName` fields.
 
+## Settings (Phase 12)
+
+```
+SettingsScreen / notes sort sheet -> Settings (AsyncNotifier) -> LoadSettings / SaveSettings
+      ^                                     |                     -> SettingsRepository
+      | select                              |                     -> preferences table
+MaterialApp.themeMode <- themeModePreferenceProvider            (in the user's own database)
+filteredNotesProvider <- noteQuery <- noteSortSettingProvider
+```
+
+- **What**: theme mode (system / light / dark) and the notes sort (the Phase 9
+  `NoteSort`: edited / created / title, ascending / descending). Defaults:
+  system theme, edited newest first.
+- **Storage**: `preferences` key/value table (schema 5) in the signed-in
+  user's database, so each account has its own settings on this device.
+  Values are plain text (`dark`, `title`, `ascending`); unknown or malformed
+  values load as the defaults. Settings are local only: not synced, never
+  queued, work offline.
+- **Lifecycle**: signed out -> defaults (nothing stored); sign-in or app start
+  -> that user's settings load; sign-out / another user -> rebuilt, so
+  nothing carries over. Changes apply at once, then save; a failed save
+  keeps the change for this run and the screen says it could not be saved.
+- **One sort**: the Settings screen and the list's sort sheet both call
+  `Settings.setNoteSort`; `noteQueryProvider` reads it through
+  `noteSortSettingProvider` (no second sort state). Search, folder and tag
+  filters stay temporary list state and are not persisted.
+- **Rebuilds**: the app watches only the theme mode, the notes query only
+  the sort.
+- **Known limitation**: before sign-in (login screen) the theme follows the
+  system; the user's theme applies once they are signed in.
+
 ## Adding a feature
 
 1. Create `features/<name>/{domain,data,presentation}` with the subfolders above.

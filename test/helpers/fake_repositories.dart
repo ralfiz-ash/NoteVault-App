@@ -9,6 +9,8 @@ import 'package:notevalult/features/tags/domain/entities/tag.dart';
 import 'package:notevalult/features/tags/domain/repositories/tag_repository.dart';
 import 'package:notevalult/features/notes/domain/entities/note.dart';
 import 'package:notevalult/features/notes/domain/repositories/note_repository.dart';
+import 'package:notevalult/features/settings/domain/entities/app_settings.dart';
+import 'package:notevalult/features/settings/domain/repositories/settings_repository.dart';
 import 'package:notevalult/features/sync/domain/entities/connectivity_status.dart';
 import 'package:notevalult/features/sync/domain/entities/sync_entities.dart';
 import 'package:notevalult/features/sync/domain/repositories/sync_repository.dart';
@@ -409,5 +411,25 @@ class FakeSyncRepository implements SyncRepository {
       await wait.future;
     }
     return nextReport;
+  }
+}
+
+/// In-memory settings for one user. Set [failSaves] to simulate storage
+/// errors.
+class FakeSettingsRepository implements SettingsRepository {
+  FakeSettingsRepository([this.stored]);
+
+  AppSettings? stored;
+  bool failSaves = false;
+  int saves = 0;
+
+  @override
+  Future<AppSettings> loadSettings() async => stored ?? const AppSettings();
+
+  @override
+  Future<void> saveSettings(AppSettings settings) async {
+    if (failSaves) throw const LocalDatabaseFailure();
+    saves++;
+    stored = settings;
   }
 }

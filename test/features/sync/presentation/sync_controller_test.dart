@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notevalult/app/di/connectivity_providers.dart';
 import 'package:notevalult/app/di/firebase_providers.dart';
+import 'package:notevalult/app/di/repository_providers.dart';
 import 'package:notevalult/app/di/sync_providers.dart';
 import 'package:notevalult/core/errors/failure.dart';
 import 'package:notevalult/features/settings/domain/entities/app_settings.dart';
@@ -29,6 +30,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         syncRepositoryProvider.overrideWithValue(sync),
+        settingsRepositoryProvider.overrideWithValue(FakeSettingsRepository()),
         connectivityRepositoryProvider.overrideWithValue(network),
         authRepositoryProvider.overrideWithValue(auth),
         syncAfterChangeDelayProvider.overrideWithValue(

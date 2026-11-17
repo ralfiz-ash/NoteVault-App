@@ -46,6 +46,7 @@ void main() {
       FakeTagRepository(const [Tag(id: 'ti', name: 'Important')]),
     ),
     searchDebounceProvider.overrideWithValue(debounce),
+    settingsRepositoryProvider.overrideWithValue(FakeSettingsRepository()),
     signedInOverride(),
   ];
 
@@ -158,7 +159,7 @@ void main() {
 
       container.read(notesFilterControllerProvider.notifier).clear();
       container.read(noteSearchControllerProvider.notifier).setNow('');
-      container
+      await container
           .read(settingsProvider.notifier)
           .setNoteSort(
             const NoteSort(field: NoteSortField.title, ascending: true),
@@ -177,6 +178,9 @@ void main() {
       final c = createContainer(
         overrides: [
           noteRepositoryProvider.overrideWithValue(failing),
+          settingsRepositoryProvider.overrideWithValue(
+            FakeSettingsRepository(),
+          ),
           signedInOverride(),
         ],
       );
@@ -242,7 +246,7 @@ void main() {
     int updates(String name) => counter.counts[name] ?? 0;
 
     test('theme change does not recompute the list', () async {
-      container
+      await container
           .read(settingsProvider.notifier)
           .setThemeMode(ThemeModePreference.dark);
       await pumpEventQueue();
@@ -258,7 +262,7 @@ void main() {
     });
 
     test('sort changes the list but not the counts', () async {
-      container
+      await container
           .read(settingsProvider.notifier)
           .setNoteSort(const NoteSort(field: NoteSortField.title));
       await pumpEventQueue();

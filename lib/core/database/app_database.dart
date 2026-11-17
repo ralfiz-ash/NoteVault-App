@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import 'tables/folders.dart';
 import 'tables/notes.dart';
+import 'tables/preferences.dart';
 import 'tables/sync_queue.dart';
 import 'tables/tags.dart';
 
@@ -16,14 +17,14 @@ part 'app_database.g.dart';
 ///
 /// Schema changes go through [migration] and bump [schemaVersion]; existing
 /// data is kept. Future sync columns are added the same way.
-@DriftDatabase(tables: [Notes, Folders, Tags, NoteTags, SyncQueue])
+@DriftDatabase(tables: [Notes, Folders, Tags, NoteTags, SyncQueue, Preferences])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   /// 1: notes, folders, tags, note_tags. 2: tags.color. 3: sync_queue.
-  /// 4: notes.version, sync_queue.entity_version.
+  /// 4: notes.version, sync_queue.entity_version. 5: preferences.
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -48,6 +49,9 @@ class AppDatabase extends _$AppDatabase {
         // Existing notes start at revision 1 (the column default).
         await m.addColumn(notes, notes.version);
         if (from >= 3) await m.addColumn(syncQueue, syncQueue.entityVersion);
+      }
+      if (from < 5) {
+        await m.createTable(preferences);
       }
     },
     beforeOpen: (details) async {

@@ -109,6 +109,15 @@ class NotesDrawer extends ConsumerWidget {
                 trailing: Text('${tagCounts[tag.name.toLowerCase()] ?? 0}'),
                 onTap: () => selectTag(tag.id),
               ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.settings_outlined),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push(AppRoutes.settings);
+              },
+            ),
           ],
         ),
       ),

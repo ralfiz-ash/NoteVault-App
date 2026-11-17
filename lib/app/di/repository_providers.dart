@@ -8,6 +8,9 @@ import '../../features/notes/data/datasources/drift_note_local_data_source.dart'
 import '../../features/notes/data/datasources/note_local_data_source.dart';
 import '../../features/notes/data/repositories/note_repository_impl.dart';
 import '../../features/notes/domain/repositories/note_repository.dart';
+import '../../features/settings/data/datasources/drift_settings_local_data_source.dart';
+import '../../features/settings/data/repositories/settings_repository_impl.dart';
+import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/tags/data/datasources/drift_tag_local_data_source.dart';
 import '../../features/tags/data/datasources/tag_local_data_source.dart';
 import '../../features/tags/data/repositories/tag_repository_impl.dart';
@@ -63,4 +66,13 @@ TagRepository tagRepository(Ref ref) => TagRepositoryImpl(
   logger: ref.watch(appLoggerProvider),
   outbox: ref.watch(syncQueueStoreProvider),
   transactions: ref.watch(localTransactionsProvider),
+);
+
+/// The signed-in user's settings (in their own database, so each account
+/// has its own settings).
+@Riverpod(keepAlive: true)
+SettingsRepository settingsRepository(Ref ref) => SettingsRepositoryImpl(
+  local: DriftSettingsLocalDataSource(database: ref.watch(appDatabaseProvider)),
+  exceptionMapper: ref.watch(localDatabaseExceptionMapperProvider),
+  logger: ref.watch(appLoggerProvider),
 );
