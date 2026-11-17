@@ -263,3 +263,101 @@ final class IdGeneratorProvider
 }
 
 String _$idGeneratorHash() => r'efbf21b17f107fe929908384c9ec689afab46ec0';
+
+/// The signed-in user's persistent sync queue (in their database).
+
+@ProviderFor(syncQueueStore)
+final syncQueueStoreProvider = SyncQueueStoreProvider._();
+
+/// The signed-in user's persistent sync queue (in their database).
+
+final class SyncQueueStoreProvider
+    extends $FunctionalProvider<SyncQueueStore, SyncQueueStore, SyncQueueStore>
+    with $Provider<SyncQueueStore> {
+  /// The signed-in user's persistent sync queue (in their database).
+  SyncQueueStoreProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'syncQueueStoreProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$syncQueueStoreHash();
+
+  @$internal
+  @override
+  $ProviderElement<SyncQueueStore> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  SyncQueueStore create(Ref ref) {
+    return syncQueueStore(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SyncQueueStore value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SyncQueueStore>(value),
+    );
+  }
+}
+
+String _$syncQueueStoreHash() => r'dec11da28d6b0216b7d0cce430dd27768d7bff05';
+
+/// Makes a local change and its sync record one transaction.
+
+@ProviderFor(localTransactions)
+final localTransactionsProvider = LocalTransactionsProvider._();
+
+/// Makes a local change and its sync record one transaction.
+
+final class LocalTransactionsProvider
+    extends
+        $FunctionalProvider<
+          LocalTransactionRunner,
+          LocalTransactionRunner,
+          LocalTransactionRunner
+        >
+    with $Provider<LocalTransactionRunner> {
+  /// Makes a local change and its sync record one transaction.
+  LocalTransactionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'localTransactionsProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$localTransactionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<LocalTransactionRunner> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  LocalTransactionRunner create(Ref ref) {
+    return localTransactions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(LocalTransactionRunner value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<LocalTransactionRunner>(value),
+    );
+  }
+}
+
+String _$localTransactionsHash() => r'3e774ba3c931ae44e4e632468948929b306d6919';

@@ -14,6 +14,9 @@ abstract interface class FolderLocalDataSource {
   /// Returns `false` when there is no such folder.
   Future<bool> updateFolder(FolderModel folder);
 
+  /// Ids of the notes in the folder.
+  Future<List<String>> noteIdsInFolder(String id);
+
   /// Notes in the folder lose their folder reference. Returns `false` when
   /// there is no such folder.
   Future<bool> deleteFolder(String id);

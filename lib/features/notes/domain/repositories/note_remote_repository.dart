@@ -25,4 +25,11 @@ abstract interface class NoteRemoteRepository {
 
   /// Throws `NotFoundFailure` if missing.
   Future<void> deleteNote(String userId, String noteId);
+
+  /// Makes the cloud copy equal to [note] (creates or replaces). Idempotent:
+  /// the document id is the note id, so retries never duplicate it.
+  Future<void> upsertNote(String userId, Note note);
+
+  /// Removes the cloud copy; succeeds if it is already gone. Idempotent.
+  Future<void> deleteNoteIfExists(String userId, String noteId);
 }

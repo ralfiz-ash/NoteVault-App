@@ -6,10 +6,16 @@ import 'note_remote_data_source.dart';
 
 /// [NoteRemoteDataSource] backed by Cloud Firestore.
 class FirestoreNoteRemoteDataSource implements NoteRemoteDataSource {
-  FirestoreNoteRemoteDataSource({required FirebaseFirestore firestore})
-    : _db = firestore;
+  FirestoreNoteRemoteDataSource({
+    required FirebaseFirestore firestore,
+    this.writeTimeout = const Duration(seconds: 20),
+  }) : _db = firestore;
 
   final FirebaseFirestore _db;
+
+  /// Sync writes give up after this (and are retried later) instead of
+  /// waiting forever on a poor connection.
+  final Duration writeTimeout;
 
   CollectionReference<Map<String, Object?>> _notes(String userId) => _db
       .collection(NoteFirestoreMapper.usersCollection)
@@ -68,4 +74,15 @@ class FirestoreNoteRemoteDataSource implements NoteRemoteDataSource {
       return true;
     });
   }
+
+  @override
+  Future<void> upsertNote(String userId, NoteModel note) =>
+      _notes(userId)
+          .doc(note.id)
+          .set(NoteFirestoreMapper.toDocument(note))
+          .timeout(writeTimeout);
+
+  @override
+  Future<void> deleteNoteIfExists(String userId, String noteId) =>
+      _notes(userId).doc(noteId).delete().timeout(writeTimeout);
 }

@@ -35,6 +35,8 @@ NoteRepository noteRepository(Ref ref) => NoteRepositoryImpl(
   exceptionMapper: ref.watch(localDatabaseExceptionMapperProvider),
   clock: ref.watch(clockProvider),
   logger: ref.watch(appLoggerProvider),
+  outbox: ref.watch(syncQueueStoreProvider),
+  transactions: ref.watch(localTransactionsProvider),
 );
 
 @Riverpod(keepAlive: true)
@@ -46,6 +48,8 @@ FolderRepository folderRepository(Ref ref) => FolderRepositoryImpl(
   local: ref.watch(folderLocalDataSourceProvider),
   exceptionMapper: ref.watch(localDatabaseExceptionMapperProvider),
   logger: ref.watch(appLoggerProvider),
+  outbox: ref.watch(syncQueueStoreProvider),
+  transactions: ref.watch(localTransactionsProvider),
 );
 
 @Riverpod(keepAlive: true)
@@ -57,4 +61,6 @@ TagRepository tagRepository(Ref ref) => TagRepositoryImpl(
   local: ref.watch(tagLocalDataSourceProvider),
   exceptionMapper: ref.watch(localDatabaseExceptionMapperProvider),
   logger: ref.watch(appLoggerProvider),
+  outbox: ref.watch(syncQueueStoreProvider),
+  transactions: ref.watch(localTransactionsProvider),
 );

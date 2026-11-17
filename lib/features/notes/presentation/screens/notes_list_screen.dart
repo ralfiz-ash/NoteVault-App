@@ -18,6 +18,7 @@ import '../widgets/active_filters_bar.dart';
 import '../widgets/note_sort_sheet.dart';
 import '../widgets/notes_drawer.dart';
 import '../widgets/notes_search_field.dart';
+import '../widgets/sync_status_banner.dart';
 import '../widgets/note_card.dart';
 
 class NotesListScreen extends ConsumerWidget {
@@ -75,6 +76,7 @@ class NotesListScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
+          const SyncStatusBanner(),
           const NotesSearchField(),
           const ActiveFiltersBar(),
           Expanded(

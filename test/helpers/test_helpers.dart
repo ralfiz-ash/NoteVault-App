@@ -8,11 +8,13 @@ import 'package:notevalult/app/di/connectivity_providers.dart';
 import 'package:notevalult/app/di/core_providers.dart';
 import 'package:notevalult/app/di/firebase_providers.dart';
 import 'package:notevalult/app/di/repository_providers.dart';
+import 'package:notevalult/app/di/sync_providers.dart';
 import 'package:notevalult/app/provider_retry.dart';
 import 'package:notevalult/core/logging/app_logger.dart';
 import 'package:notevalult/features/auth/domain/entities/app_user.dart';
 import 'package:notevalult/features/folders/domain/repositories/folder_repository.dart';
 import 'package:notevalult/features/notes/domain/repositories/note_repository.dart';
+import 'package:notevalult/features/sync/domain/repositories/sync_repository.dart';
 import 'package:notevalult/features/tags/domain/repositories/tag_repository.dart';
 
 import 'fake_repositories.dart';
@@ -63,7 +65,9 @@ List<Override> appTestOverrides({
   FolderRepository? folders,
   TagRepository? tags,
   FakeConnectivityRepository? connectivity,
+  SyncRepository? sync,
 }) => [
+  syncRepositoryProvider.overrideWithValue(sync ?? FakeSyncRepository()),
   folderRepositoryProvider.overrideWithValue(folders ?? FakeFolderRepository()),
   tagRepositoryProvider.overrideWithValue(tags ?? FakeTagRepository()),
   appLoggerProvider.overrideWithValue(const NoOpLogger()),

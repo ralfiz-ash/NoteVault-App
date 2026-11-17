@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import 'tables/folders.dart';
 import 'tables/notes.dart';
+import 'tables/sync_queue.dart';
 import 'tables/tags.dart';
 
 part 'app_database.g.dart';
@@ -15,13 +16,13 @@ part 'app_database.g.dart';
 ///
 /// Schema changes go through [migration] and bump [schemaVersion]; existing
 /// data is kept. Future sync columns are added the same way.
-@DriftDatabase(tables: [Notes, Folders, Tags, NoteTags])
+@DriftDatabase(tables: [Notes, Folders, Tags, NoteTags, SyncQueue])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
-  /// 1: notes, folders, tags, note_tags. 2: tags.color.
+  /// 1: notes, folders, tags, note_tags. 2: tags.color. 3: sync_queue.
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -30,6 +31,17 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         // Existing tags get the column's default colour.
         await m.addColumn(tags, tags.color);
+      }
+      if (from < 3) {
+        await m.createTable(syncQueue);
+        // Notes created before sync existed have never been uploaded: queue
+        // them all once so they reach the cloud.
+        await customStatement(
+          'INSERT INTO sync_queue (entity_type, entity_id, operation, status, '
+          'version, retry_count, created_at, updated_at) '
+          "SELECT 'note', id, 'create', 'pending', 1, 0, updated_at, "
+          'updated_at FROM notes',
+        );
       }
     },
     beforeOpen: (details) async {

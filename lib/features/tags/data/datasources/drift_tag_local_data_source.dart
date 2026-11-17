@@ -41,6 +41,16 @@ class DriftTagLocalDataSource implements TagLocalDataSource {
   }
 
   @override
+  Future<List<String>> noteIdsWithTag(String id) async {
+    final query = _db.selectOnly(_db.noteTags)
+      ..addColumns([_db.noteTags.noteId])
+      ..where(_db.noteTags.tagId.equals(id));
+    return [
+      for (final row in await query.get()) row.read(_db.noteTags.noteId)!,
+    ];
+  }
+
+  @override
   Future<void> insertTag(TagModel tag) => _db
       .into(_db.tags)
       .insert(

@@ -14,6 +14,9 @@ abstract interface class TagLocalDataSource {
 
   Future<void> insertTag(TagModel tag);
 
+  /// Ids of the notes that use the tag.
+  Future<List<String>> noteIdsWithTag(String id);
+
   /// Returns `false` when there is no such tag.
   Future<bool> updateTag(TagModel tag);
 

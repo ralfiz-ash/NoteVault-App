@@ -1,3 +1,5 @@
+import '../../../../core/database/local_transaction.dart';
+import '../../../../core/database/sync_queue_store.dart';
 import '../../../../core/errors/exception_mapper.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/guard.dart';
@@ -12,11 +14,18 @@ class FolderRepositoryImpl implements FolderRepository {
     required this.local,
     required this.exceptionMapper,
     this.logger = const NoOpLogger(),
+    this.outbox,
+    this.transactions = const NoTransactionRunner(),
   });
 
   final FolderLocalDataSource local;
   final ExceptionMapper exceptionMapper;
   final AppLogger logger;
+
+  /// Folders themselves are not synced yet, but deleting one changes its
+  /// notes (they lose the folder), so those notes are queued for upload.
+  final SyncOutbox? outbox;
+  final LocalTransactionRunner transactions;
 
   Future<T> _guard<T>(Future<T> Function() action) =>
       guardFailures(action, mapper: exceptionMapper, logger: logger);
@@ -58,7 +67,13 @@ class FolderRepositoryImpl implements FolderRepository {
 
   @override
   Future<void> deleteFolder(String id) => _guard(() async {
-    if (!await local.deleteFolder(id)) throw _notFound(id);
+    await transactions.run(() async {
+      final affected = await local.noteIdsInFolder(id);
+      if (!await local.deleteFolder(id)) throw _notFound(id);
+      for (final noteId in affected) {
+        await outbox?.record(SyncEntity.note, noteId, SyncOperation.update);
+      }
+    });
   });
 
   Future<Folder> _require(String id) async {
