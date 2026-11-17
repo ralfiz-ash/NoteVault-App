@@ -17,6 +17,10 @@ abstract interface class TagLocalDataSource {
   /// Ids of the notes that use the tag.
   Future<List<String>> noteIdsWithTag(String id);
 
+  /// Bumps the sync version of every note using the tag (their tag names
+  /// change on rename/delete).
+  Future<void> bumpNoteVersions(String tagId);
+
   /// Returns `false` when there is no such tag.
   Future<bool> updateTag(TagModel tag);
 

@@ -60,8 +60,17 @@ class FolderRepositoryImpl implements FolderRepository {
       name: folder.name,
       createdAt: existing.createdAt,
     );
-    final found = await local.updateFolder(FolderModel.fromEntity(toSave));
-    if (!found) throw _notFound(folder.id);
+    await transactions.run(() async {
+      final found = await local.updateFolder(FolderModel.fromEntity(toSave));
+      if (!found) throw _notFound(folder.id);
+      // Cloud copies of its notes carry the folder name: re-upload them.
+      if (existing.name != toSave.name) {
+        await local.bumpNoteVersions(folder.id);
+        for (final noteId in await local.noteIdsInFolder(folder.id)) {
+          await outbox?.record(SyncEntity.note, noteId, SyncOperation.update);
+        }
+      }
+    });
     return _require(folder.id);
   });
 
@@ -74,6 +83,19 @@ class FolderRepositoryImpl implements FolderRepository {
         await outbox?.record(SyncEntity.note, noteId, SyncOperation.update);
       }
     });
+  });
+
+  @override
+  Future<void> applyRemoteFolder(Folder folder) => _guard(() async {
+    final existing = await local.getFolder(folder.id);
+    if (existing != null && existing.name == folder.name) return;
+    await local.upsertFolder(
+      FolderModel(
+        id: folder.id,
+        name: folder.name,
+        createdAt: existing?.createdAt ?? folder.createdAt,
+      ),
+    );
   });
 
   Future<Folder> _require(String id) async {

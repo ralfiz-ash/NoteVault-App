@@ -18,4 +18,9 @@ abstract interface class FolderRepository {
   /// Notes in the folder are kept and become folder-less. Throws
   /// `NotFoundFailure` if the folder does not exist.
   Future<void> deleteFolder(String id);
+
+  /// Sync only: makes sure a folder used by a note from the cloud exists
+  /// here with that name (creates or renames it), without touching notes or
+  /// recording anything to upload.
+  Future<void> applyRemoteFolder(Folder folder);
 }

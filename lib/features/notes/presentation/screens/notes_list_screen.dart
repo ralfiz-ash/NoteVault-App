@@ -8,6 +8,7 @@ import '../../../../core/presentation/confirm_dialog.dart';
 import '../../../../core/presentation/failure_snack_bar.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../folders/presentation/providers/folders_provider.dart';
+import '../../../sync/presentation/providers/sync_providers.dart';
 import '../../domain/entities/note.dart';
 import '../providers/delete_note_controller.dart';
 import '../providers/notes_provider.dart';
@@ -40,6 +41,24 @@ class NotesListScreen extends ConsumerWidget {
     ref.listen(deleteNoteControllerProvider, (_, next) {
       if (next case AsyncError(:final error)) {
         showFailureSnackBar(context, 'Unable to delete note', error);
+      }
+    });
+    // Non-blocking notice when sync had to resolve a conflict.
+    ref.listen(syncControllerProvider.select((s) => s.conflicts), (
+      previous,
+      next,
+    ) {
+      if (next > (previous ?? 0)) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text(
+                'A note was also changed on another device. The newest '
+                'version is shown; any other text was kept as a copy.',
+              ),
+            ),
+          );
       }
     });
     ref.listen(authControllerProvider, (_, next) {

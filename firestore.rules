@@ -19,7 +19,8 @@ service cloud.firestore {
     function isValidNote(noteId) {
       let note = request.resource.data;
       return note.keys().hasOnly(
-               ['id', 'title', 'content', 'folderId', 'tags', 'createdAt', 'updatedAt'])
+               ['id', 'title', 'content', 'folderId', 'folderName', 'tags',
+                'createdAt', 'updatedAt', 'version'])
           && note.keys().hasAll(['id', 'title', 'content', 'tags', 'createdAt', 'updatedAt'])
           && note.id == noteId
           && note.title is string && note.title.size() <= 1000
@@ -27,7 +28,10 @@ service cloud.firestore {
           && (!('folderId' in note) || note.folderId == null || note.folderId is string)
           && note.tags is list && note.tags.size() <= 100
           && note.createdAt is timestamp
-          && note.updatedAt is timestamp;
+          && note.updatedAt is timestamp
+          && (!('version' in note) || (note.version is int && note.version >= 1))
+          && (!('folderName' in note) || note.folderName == null
+              || (note.folderName is string && note.folderName.size() <= 100));
     }
 
     match /users/{userId}/notes/{noteId} {

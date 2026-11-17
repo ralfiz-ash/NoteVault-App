@@ -11,6 +11,7 @@ class NoteModel {
     required this.updatedAt,
     this.folderId,
     this.tags = const [],
+    this.version = 1,
   });
 
   final String id;
@@ -20,6 +21,7 @@ class NoteModel {
   final List<String> tags;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final int version;
 
   factory NoteModel.fromEntity(Note note) => NoteModel(
     id: note.id,
@@ -29,6 +31,7 @@ class NoteModel {
     tags: note.tags,
     createdAt: note.createdAt,
     updatedAt: note.updatedAt,
+    version: note.version,
   );
 
   factory NoteModel.fromMap(Map<String, dynamic> map) => NoteModel(
@@ -45,6 +48,7 @@ class NoteModel {
       map['updatedAt'] as int,
       isUtc: true,
     ),
+    version: map['version'] as int? ?? 1,
   );
 
   Map<String, dynamic> toMap() => {
@@ -55,6 +59,7 @@ class NoteModel {
     'tags': tags,
     'createdAt': createdAt.millisecondsSinceEpoch,
     'updatedAt': updatedAt.millisecondsSinceEpoch,
+    'version': version,
   };
 
   Note toEntity() => Note(
@@ -65,5 +70,6 @@ class NoteModel {
     tags: tags,
     createdAt: createdAt,
     updatedAt: updatedAt,
+    version: version,
   );
 }

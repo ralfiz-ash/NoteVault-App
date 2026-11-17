@@ -22,4 +22,7 @@ abstract interface class NoteLocalDataSource {
 
   /// Returns `false` when there is no such note.
   Future<bool> deleteNote(String id);
+
+  /// Inserts or replaces (used to apply notes received from the cloud).
+  Future<void> upsertNote(NoteModel note);
 }

@@ -28,10 +28,18 @@ class PendingChanges {
 
 /// Outcome of one sync run.
 class SyncReport {
-  const SyncReport({this.synced = 0, this.failed = 0, this.error});
+  const SyncReport({
+    this.synced = 0,
+    this.failed = 0,
+    this.conflicts = 0,
+    this.error,
+  });
 
   final int synced;
   final int failed;
+
+  /// Uploads that met a newer cloud version (resolved, see conflict rule).
+  final int conflicts;
 
   /// The first failure, if any (for the UI message).
   final Failure? error;
@@ -40,7 +48,20 @@ class SyncReport {
 
   SyncReport operator +(SyncReport other) => SyncReport(
     synced: synced + other.synced,
+    conflicts: conflicts + other.conflicts,
     failed: other.failed, // the latest pass decides what is still failing
     error: other.error ?? (other.failed > 0 ? error : null),
   );
+}
+
+/// Result of applying one batch of cloud changes on this device.
+class RemoteSyncReport {
+  const RemoteSyncReport({this.applied = 0, this.conflicts = 0});
+
+  /// Notes created, updated or deleted locally from the cloud.
+  final int applied;
+
+  /// Local unsynced edits that lost to a newer cloud version (kept as
+  /// conflict copies) or cloud edits that beat a local delete.
+  final int conflicts;
 }

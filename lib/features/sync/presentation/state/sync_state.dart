@@ -7,6 +7,7 @@ class SyncState {
     this.phase = SyncPhase.idle,
     this.lastSyncedAt,
     this.errorMessage,
+    this.conflicts = 0,
   });
 
   final SyncPhase phase;
@@ -15,14 +16,19 @@ class SyncState {
   final DateTime? lastSyncedAt;
   final String? errorMessage;
 
+  /// Conflicts resolved this session (for a one-off notice in the UI).
+  final int conflicts;
+
   SyncState copyWith({
     SyncPhase? phase,
     DateTime? lastSyncedAt,
     String? Function()? errorMessage,
+    int? conflicts,
   }) => SyncState(
     phase: phase ?? this.phase,
     lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
     errorMessage: errorMessage != null ? errorMessage() : this.errorMessage,
+    conflicts: conflicts ?? this.conflicts,
   );
 
   @override
@@ -30,8 +36,9 @@ class SyncState {
       other is SyncState &&
       other.phase == phase &&
       other.lastSyncedAt == lastSyncedAt &&
-      other.errorMessage == errorMessage;
+      other.errorMessage == errorMessage &&
+      other.conflicts == conflicts;
 
   @override
-  int get hashCode => Object.hash(phase, lastSyncedAt, errorMessage);
+  int get hashCode => Object.hash(phase, lastSyncedAt, errorMessage, conflicts);
 }

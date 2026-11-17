@@ -59,6 +59,7 @@ class NoteDraft {
     tags: tags,
     createdAt: note.createdAt,
     updatedAt: note.updatedAt,
+    version: note.version,
   );
 
   @override

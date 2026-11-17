@@ -16,5 +16,9 @@ SyncRepository syncRepository(Ref ref) => SyncRepositoryImpl(
   queue: ref.watch(syncQueueStoreProvider),
   localNotes: ref.watch(noteRepositoryProvider),
   remoteNotes: ref.watch(noteRemoteRepositoryProvider),
+  folders: ref.watch(folderRepositoryProvider),
+  transactions: ref.watch(localTransactionsProvider),
+  idGenerator: ref.watch(idGeneratorProvider),
+  clock: ref.watch(clockProvider),
   logger: ref.watch(appLoggerProvider),
 );

@@ -439,15 +439,60 @@ SyncController (when to sync) -> SyncPendingChanges -> SyncRepository
     newer state goes next. Failures keep the row (failed + error); local data
     is never rolled back. Rows left "syncing" by a killed app are released at
     the next run. Writes time out after 20 s and are retried later.
-- **Conflict strategy**: last local change wins. The cloud copy is replaced
-  by (or deleted like) the device's current note. Nothing is downloaded yet,
-  so an upload never changes local data.
+- **Conflict strategy**: see "Cross-device sync" below.
 - **UI**: `SyncStatusBanner` (notes list) shows offline, syncing, failed with
   Retry, or "N changes waiting to sync". `pendingChangesProvider` reads the
   queue (no separate counter). `SyncController` is started once by the app
   with `ref.listen`, so widget rebuilds never start a sync.
 - **Scope**: notes only. Folders and tags are not synced as entities yet;
   their effect on notes (folder cleared, tag names) is.
+
+## Cross-device sync (Phase 11)
+
+```
+Firestore users/{uid}/notes  --snapshots-->  NoteRemoteRepository.watchChanges
+      ^                                             |
+      | upsertUnlessNewer / deleteUnlessEdited      v
+SyncRepositoryImpl (upload: queue)          SyncRepositoryImpl.followRemoteChanges
+                                                    | applyRemoteNote / applyRemoteDelete
+                                                    v   (never queued -> no loop)
+                                            local database -> notesProvider -> UI
+```
+
+- **Versions**: `Note.version` (column `notes.version`, Firestore `version`;
+  schema 4). 1 on create, +1 on every local change (also when a folder
+  rename/delete or tag rename/delete changes the note). Notes received from
+  the cloud keep the cloud's version, so the same number means the same
+  revision everywhere.
+- **Conflict rule** (`NoteVersioning`, domain): latest revision wins:
+  higher version, else later `updatedAt` (two edits from the same revision),
+  else a fixed content tie-break, so every device picks the same winner and
+  all converge. Plus **edits win over deletes**:
+  - update vs delete: an unsynced edit re-creates a note deleted elsewhere;
+  - delete vs update: a cloud version newer than the deleted revision
+    restores the note and drops the pending delete.
+  - A local unsynced edit that loses is kept as a new note
+    "<title> (conflict copy)", never silently dropped. The UI shows a
+    one-off, non-blocking notice.
+- **Uploads are conditional**: a Firestore transaction reads the cloud note
+  and writes only if the local revision wins; otherwise the conflict is
+  resolved locally.
+- **Downloads**: the first snapshot lists every note (initial sync on a new
+  device), later snapshots only changes. Each batch is applied in one local
+  transaction, through the same local database the UI reads, so search,
+  filters, sorting and counts update by themselves. Echoes of this device's
+  own uploads compare equal and are ignored; duplicate events are no-ops.
+- **Loop prevention**: cloud changes are written with `applyRemoteNote` /
+  `applyRemoteDelete`, which never touch the sync queue; only user actions
+  record outgoing changes.
+- **Folders** travel inside note documents (`folderId` + `folderName`), so a
+  device creates or renames the folder when a note needs it. Empty folders
+  and tag colours stay local.
+- **Lifecycle**: `remoteSyncProvider` holds exactly one Firestore listener for
+  the signed-in user; Riverpod cancels it on sign-out or user change. It is
+  kept alive by `SyncController` (started once by the app) and restarted
+  after an error. Widgets never see Firestore.
+- **Security rules** allow the new `version` and `folderName` fields.
 
 ## Adding a feature
 

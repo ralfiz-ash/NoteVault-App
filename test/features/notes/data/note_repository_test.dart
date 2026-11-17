@@ -28,6 +28,8 @@ class _ThrowingNoteDataSource implements NoteLocalDataSource {
   Future<bool> updateNote(NoteModel note) => Future.error(error);
   @override
   Future<bool> deleteNote(String id) => Future.error(error);
+  @override
+  Future<void> upsertNote(NoteModel note) => Future.error(error);
 }
 
 void main() {

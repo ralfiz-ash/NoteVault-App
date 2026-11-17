@@ -19,10 +19,20 @@ abstract interface class NoteRepository {
   Future<Note> createNote(Note note);
 
   /// Saves changes to an existing note. The stored creation date and id are
-  /// kept and the update date is set to now. Returns the saved note. Throws
+  /// kept, the update date is set to now and the version goes up by one. Returns the saved note. Throws
   /// `NotFoundFailure` if the note does not exist.
   Future<Note> updateNote(Note note);
 
   /// Throws `NotFoundFailure` if there is no note with [id].
   Future<void> deleteNote(String id);
+
+  /// Sync only: stores a note received from the cloud exactly as given
+  /// (including its version and dates), WITHOUT recording it as a local
+  /// change to upload. This is what keeps cloud -> local updates from
+  /// bouncing back to the cloud.
+  Future<void> applyRemoteNote(Note note);
+
+  /// Sync only: removes a note deleted in the cloud, without recording a
+  /// local change. No error if it does not exist.
+  Future<void> applyRemoteDelete(String id);
 }

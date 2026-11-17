@@ -51,6 +51,14 @@ class DriftTagLocalDataSource implements TagLocalDataSource {
   }
 
   @override
+  Future<void> bumpNoteVersions(String tagId) => _db.customUpdate(
+    'UPDATE notes SET version = version + 1 WHERE id IN '
+    '(SELECT note_id FROM note_tags WHERE tag_id = ?)',
+    variables: [Variable.withString(tagId)],
+    updates: {_db.notes},
+  );
+
+  @override
   Future<void> insertTag(TagModel tag) => _db
       .into(_db.tags)
       .insert(

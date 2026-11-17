@@ -52,14 +52,29 @@ class DriftFolderLocalDataSource implements FolderLocalDataSource {
   }
 
   @override
+  Future<void> bumpNoteVersions(String folderId) => _db.customUpdate(
+    'UPDATE notes SET version = version + 1 WHERE folder_id = ?',
+    variables: [Variable.withString(folderId)],
+    updates: {_db.notes},
+  );
+
+  @override
+  Future<void> upsertFolder(FolderModel folder) =>
+      _db.into(_db.folders).insertOnConflictUpdate(_toCompanion(folder));
+
+  @override
   Future<bool> deleteFolder(String id) {
     return _db.transaction(() async {
       // Notes are kept and become folder-less: one UPDATE for all of them
       // (no per-note writes; updatedAt and everything else untouched). Done
       // explicitly so note watchers refresh (ON DELETE SET NULL would change
       // the rows without notifying them).
-      await (_db.update(_db.notes)..where((n) => n.folderId.equals(id))).write(
-        const NotesCompanion(folderId: Value(null)),
+      // The notes changed, so their sync version goes up too.
+      await _db.customUpdate(
+        'UPDATE notes SET folder_id = NULL, version = version + 1 '
+        'WHERE folder_id = ?',
+        variables: [Variable.withString(id)],
+        updates: {_db.notes},
       );
       final removed = await (_db.delete(
         _db.folders,
