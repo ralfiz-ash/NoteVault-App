@@ -11,6 +11,7 @@ class NoteModel {
     required this.updatedAt,
     this.folderId,
     this.tags = const [],
+    this.version = 1,
   });
 
   final String id;
@@ -20,46 +21,55 @@ class NoteModel {
   final List<String> tags;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final int version;
 
   factory NoteModel.fromEntity(Note note) => NoteModel(
-        id: note.id,
-        title: note.title,
-        content: note.content,
-        folderId: note.folderId,
-        tags: note.tags,
-        createdAt: note.createdAt,
-        updatedAt: note.updatedAt,
-      );
+    id: note.id,
+    title: note.title,
+    content: note.content,
+    folderId: note.folderId,
+    tags: note.tags,
+    createdAt: note.createdAt,
+    updatedAt: note.updatedAt,
+    version: note.version,
+  );
 
   factory NoteModel.fromMap(Map<String, dynamic> map) => NoteModel(
-        id: map['id'] as String,
-        title: map['title'] as String,
-        content: map['content'] as String,
-        folderId: map['folderId'] as String?,
-        tags: List<String>.from(map['tags'] as List? ?? const []),
-        createdAt:
-            DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-        updatedAt:
-            DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
-      );
+    id: map['id'] as String,
+    title: map['title'] as String,
+    content: map['content'] as String,
+    folderId: map['folderId'] as String?,
+    tags: List<String>.from(map['tags'] as List? ?? const []),
+    createdAt: DateTime.fromMillisecondsSinceEpoch(
+      map['createdAt'] as int,
+      isUtc: true,
+    ),
+    updatedAt: DateTime.fromMillisecondsSinceEpoch(
+      map['updatedAt'] as int,
+      isUtc: true,
+    ),
+    version: map['version'] as int? ?? 1,
+  );
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'title': title,
-        'content': content,
-        'folderId': folderId,
-        'tags': tags,
-        'createdAt': createdAt.millisecondsSinceEpoch,
-        'updatedAt': updatedAt.millisecondsSinceEpoch,
-      };
+    'id': id,
+    'title': title,
+    'content': content,
+    'folderId': folderId,
+    'tags': tags,
+    'createdAt': createdAt.millisecondsSinceEpoch,
+    'updatedAt': updatedAt.millisecondsSinceEpoch,
+    'version': version,
+  };
 
   Note toEntity() => Note(
-        id: id,
-        title: title,
-        content: content,
-        folderId: folderId,
-        tags: tags,
-        createdAt: createdAt,
-        updatedAt: updatedAt,
-      );
+    id: id,
+    title: title,
+    content: content,
+    folderId: folderId,
+    tags: tags,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    version: version,
+  );
 }

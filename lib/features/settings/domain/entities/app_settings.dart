@@ -1,25 +1,35 @@
+import '../../../notes/domain/entities/note_sort.dart';
+
 /// Theme preference. Deliberately not Flutter's `ThemeMode`: the domain stays
 /// free of Flutter, and the presentation layer maps this to `ThemeMode`.
 enum ThemeModePreference { system, light, dark }
 
-enum NoteSortOrder { updatedNewest, createdNewest, titleAscending }
-
+/// One user's preferences. Defaults: follow the system theme, notes sorted
+/// by last edit, newest first.
 class AppSettings {
   const AppSettings({
     this.themeMode = ThemeModePreference.system,
-    this.sortOrder = NoteSortOrder.updatedNewest,
+    this.noteSort = NoteSort.defaultSort,
   });
 
   final ThemeModePreference themeMode;
-  final NoteSortOrder sortOrder;
 
-  AppSettings copyWith({
-    ThemeModePreference? themeMode,
-    NoteSortOrder? sortOrder,
-  }) {
+  /// The notes list order (field + direction).
+  final NoteSort noteSort;
+
+  @override
+  bool operator ==(Object other) =>
+      other is AppSettings &&
+      other.themeMode == themeMode &&
+      other.noteSort == noteSort;
+
+  @override
+  int get hashCode => Object.hash(themeMode, noteSort);
+
+  AppSettings copyWith({ThemeModePreference? themeMode, NoteSort? noteSort}) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
-      sortOrder: sortOrder ?? this.sortOrder,
+      noteSort: noteSort ?? this.noteSort,
     );
   }
 }

@@ -15,8 +15,10 @@ void main() {
       .where((f) => f.path.endsWith('.dart'))
       .toList();
 
-  final importPattern = RegExp(r'''^\s*(?:import|export)\s+['"]([^'"]+)['"]''',
-      multiLine: true);
+  final importPattern = RegExp(
+    r'''^\s*(?:import|export)\s+['"]([^'"]+)['"]''',
+    multiLine: true,
+  );
 
   /// Imports of [file] as normalized `lib/...` paths, or the raw
   /// `package:`/`dart:` URI for external ones.
@@ -78,15 +80,34 @@ void main() {
       final target = imp.startsWith('lib/') ? place(imp) : null;
 
       if (isCore) {
-        if (imp.startsWith('lib/features/')) {
-          report(file, imp, 'core must not depend on features');
+        if (imp.startsWith('lib/features/') || imp.startsWith('lib/app/')) {
+          report(file, imp, 'core must not depend on features or app');
         }
         continue;
       }
       if (p == null) continue;
+      // Feature presentation may read the DI providers in lib/app/di (typed
+      // by domain abstractions) and the route path constants; nothing else
+      // in a feature may touch app/.
+      final allowedFromPresentation =
+          imp.startsWith('lib/app/di/') ||
+          imp == 'lib/app/router/app_routes.dart';
+      if (imp.startsWith('lib/app/') &&
+          !(allowedFromPresentation && p.layer == 'presentation')) {
+        report(
+          file,
+          imp,
+          'features may only use app/di and app_routes, from presentation',
+        );
+      }
 
       switch (p.layer) {
         case 'domain':
+          if (imp.startsWith('lib/core/database/') ||
+              imp.startsWith('lib/core/firebase/') ||
+              imp == 'lib/firebase_options.dart') {
+            report(file, imp, 'domain must not use the database or Firebase');
+          }
           if (isFlutter(imp) || isRiverpod(imp) || isInfra(imp)) {
             report(file, imp, 'domain must be pure Dart');
           }
@@ -106,6 +127,15 @@ void main() {
             }
           }
         case 'presentation':
+          if (imp.startsWith('lib/core/database/') ||
+              imp.startsWith('lib/core/firebase/') ||
+              imp == 'lib/firebase_options.dart') {
+            report(
+              file,
+              imp,
+              'presentation must not use the database or Firebase',
+            );
+          }
           if (isInfra(imp)) {
             report(file, imp, 'presentation must not use infrastructure SDKs');
           }
@@ -113,10 +143,20 @@ void main() {
             if (target.layer == 'data') {
               report(file, imp, 'presentation must not import data');
             }
+            // Another feature's providers/state are its public presentation
+            // API (e.g. the notes editor uses the folders list); its screens
+            // and widgets are not.
+            final isProviderApi =
+                imp.contains('/presentation/providers/') ||
+                imp.contains('/presentation/state/');
             if (target.layer == 'presentation' &&
-                target.feature != p.feature) {
-              report(file, imp,
-                  'presentation must not import another feature\'s presentation');
+                target.feature != p.feature &&
+                !isProviderApi) {
+              report(
+                file,
+                imp,
+                'presentation must not import another feature\'s screens/widgets',
+              );
             }
           }
       }
@@ -128,12 +168,17 @@ void main() {
   });
 
   test('every feature has data, domain and presentation layers', () {
-    final features = Directory('lib/features').listSync().whereType<Directory>();
+    final features = Directory('lib/features')
+        .listSync()
+        .whereType<Directory>();
     expect(features, isNotEmpty);
     for (final feature in features) {
       for (final layer in ['data', 'domain', 'presentation']) {
-        expect(Directory('${feature.path}/$layer').existsSync(), isTrue,
-            reason: '${feature.path} is missing $layer/');
+        expect(
+          Directory('${feature.path}/$layer').existsSync(),
+          isTrue,
+          reason: '${feature.path} is missing $layer/',
+        );
       }
     }
   });

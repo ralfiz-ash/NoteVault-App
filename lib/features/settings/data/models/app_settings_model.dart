@@ -1,36 +1,67 @@
+import '../../../notes/domain/entities/note_sort.dart';
 import '../../domain/entities/app_settings.dart';
 
+/// Settings as stored: plain text values only (never Flutter types).
+///
+/// | key           | values                       |
+/// |---------------|------------------------------|
+/// | themeMode     | system / light / dark        |
+/// | sortField     | updated / created / title    |
+/// | sortDirection | ascending / descending       |
 class AppSettingsModel {
-  const AppSettingsModel({required this.themeMode, required this.sortOrder});
+  const AppSettingsModel({
+    required this.themeMode,
+    required this.sortField,
+    required this.sortDirection,
+  });
 
-  /// Stored by enum name so values survive enum reordering.
+  static const themeModeKey = 'themeMode';
+  static const sortFieldKey = 'sortField';
+  static const sortDirectionKey = 'sortDirection';
+
   final String themeMode;
-  final String sortOrder;
+  final String sortField;
+  final String sortDirection;
 
-  factory AppSettingsModel.fromEntity(AppSettings settings) =>
+  factory AppSettingsModel.fromEntity(AppSettings settings) => AppSettingsModel(
+    themeMode: settings.themeMode.name,
+    sortField: settings.noteSort.field.name,
+    sortDirection: settings.noteSort.ascending ? 'ascending' : 'descending',
+  );
+
+  factory AppSettingsModel.fromMap(Map<String, String?> map) =>
       AppSettingsModel(
-        themeMode: settings.themeMode.name,
-        sortOrder: settings.sortOrder.name,
+        themeMode: map[themeModeKey] ?? '',
+        sortField: map[sortFieldKey] ?? '',
+        sortDirection: map[sortDirectionKey] ?? '',
       );
 
-  factory AppSettingsModel.fromMap(Map<String, dynamic> map) =>
-      AppSettingsModel(
-        themeMode: map['themeMode'] as String? ?? '',
-        sortOrder: map['sortOrder'] as String? ?? '',
-      );
+  Map<String, String> toMap() => {
+    themeModeKey: themeMode,
+    sortFieldKey: sortField,
+    sortDirectionKey: sortDirection,
+  };
 
-  Map<String, dynamic> toMap() =>
-      {'themeMode': themeMode, 'sortOrder': sortOrder};
-
-  /// Unknown or missing values fall back to the defaults.
-  AppSettings toEntity() => AppSettings(
-        themeMode: ThemeModePreference.values.firstWhere(
-          (v) => v.name == themeMode,
-          orElse: () => ThemeModePreference.system,
+  /// Missing, unknown or malformed values fall back to the defaults, so a
+  /// bad stored value can never break the app.
+  AppSettings toEntity() {
+    const defaults = AppSettings();
+    return AppSettings(
+      themeMode: ThemeModePreference.values.firstWhere(
+        (v) => v.name == themeMode,
+        orElse: () => defaults.themeMode,
+      ),
+      noteSort: NoteSort(
+        field: NoteSortField.values.firstWhere(
+          (v) => v.name == sortField,
+          orElse: () => defaults.noteSort.field,
         ),
-        sortOrder: NoteSortOrder.values.firstWhere(
-          (v) => v.name == sortOrder,
-          orElse: () => NoteSortOrder.updatedNewest,
-        ),
-      );
+        ascending: switch (sortDirection) {
+          'ascending' => true,
+          'descending' => false,
+          _ => defaults.noteSort.ascending,
+        },
+      ),
+    );
+  }
 }
