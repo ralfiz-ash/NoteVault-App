@@ -61,6 +61,68 @@ final class PendingChangesProvider
 
 String _$pendingChangesHash() => r'f56c1ae3511abce10ae40f581c912bbd905ecc42';
 
+/// Applies the signed-in user's cloud changes to the local database for as
+/// long as it is listened to. One Firestore listener per user: it is
+/// created when a user signs in and cancelled (by Riverpod) when the user
+/// signs out or changes. Widgets never see this stream; they keep reading
+/// the local notes.
+///
+/// keepAlive: owned by the sync controller for the whole session.
+
+@ProviderFor(remoteSync)
+final remoteSyncProvider = RemoteSyncProvider._();
+
+/// Applies the signed-in user's cloud changes to the local database for as
+/// long as it is listened to. One Firestore listener per user: it is
+/// created when a user signs in and cancelled (by Riverpod) when the user
+/// signs out or changes. Widgets never see this stream; they keep reading
+/// the local notes.
+///
+/// keepAlive: owned by the sync controller for the whole session.
+
+final class RemoteSyncProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<RemoteSyncReport>,
+          RemoteSyncReport,
+          Stream<RemoteSyncReport>
+        >
+    with $FutureModifier<RemoteSyncReport>, $StreamProvider<RemoteSyncReport> {
+  /// Applies the signed-in user's cloud changes to the local database for as
+  /// long as it is listened to. One Firestore listener per user: it is
+  /// created when a user signs in and cancelled (by Riverpod) when the user
+  /// signs out or changes. Widgets never see this stream; they keep reading
+  /// the local notes.
+  ///
+  /// keepAlive: owned by the sync controller for the whole session.
+  RemoteSyncProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'remoteSyncProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$remoteSyncHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<RemoteSyncReport> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<RemoteSyncReport> create(Ref ref) {
+    return remoteSync(ref);
+  }
+}
+
+String _$remoteSyncHash() => r'057f1383c0a3153ca4c10c9ba36e83be5321daaf';
+
 @ProviderFor(syncPendingChangesUseCase)
 final syncPendingChangesUseCaseProvider = SyncPendingChangesUseCaseProvider._();
 
@@ -216,6 +278,9 @@ String _$syncRetryBaseDelayHash() =>
 /// - a failed sync, retried with growing delays (30 s, 1, 2, 4, 5 min)
 /// - [syncNow], e.g. the Retry button
 ///
+/// It also keeps the cloud -> device direction ([remoteSyncProvider]) alive
+/// and restarts it after an error.
+///
 /// Nothing is attempted while offline. Built once (keepAlive) and only
 /// listens to its inputs, so rebuilding widgets never starts a sync.
 
@@ -232,6 +297,9 @@ final syncControllerProvider = SyncControllerProvider._();
 /// - a failed sync, retried with growing delays (30 s, 1, 2, 4, 5 min)
 /// - [syncNow], e.g. the Retry button
 ///
+/// It also keeps the cloud -> device direction ([remoteSyncProvider]) alive
+/// and restarts it after an error.
+///
 /// Nothing is attempted while offline. Built once (keepAlive) and only
 /// listens to its inputs, so rebuilding widgets never starts a sync.
 final class SyncControllerProvider
@@ -245,6 +313,9 @@ final class SyncControllerProvider
   /// - new local changes are queued (after a short delay)
   /// - a failed sync, retried with growing delays (30 s, 1, 2, 4, 5 min)
   /// - [syncNow], e.g. the Retry button
+  ///
+  /// It also keeps the cloud -> device direction ([remoteSyncProvider]) alive
+  /// and restarts it after an error.
   ///
   /// Nothing is attempted while offline. Built once (keepAlive) and only
   /// listens to its inputs, so rebuilding widgets never starts a sync.
@@ -275,7 +346,7 @@ final class SyncControllerProvider
   }
 }
 
-String _$syncControllerHash() => r'c6fe031c17b9d80643912d099ed627ec479cd11c';
+String _$syncControllerHash() => r'1c102853a1358b3ddf43f1036807f90927e44527';
 
 /// Starts uploads at the right moments; no widget ever syncs by itself.
 ///
@@ -286,6 +357,9 @@ String _$syncControllerHash() => r'c6fe031c17b9d80643912d099ed627ec479cd11c';
 /// - new local changes are queued (after a short delay)
 /// - a failed sync, retried with growing delays (30 s, 1, 2, 4, 5 min)
 /// - [syncNow], e.g. the Retry button
+///
+/// It also keeps the cloud -> device direction ([remoteSyncProvider]) alive
+/// and restarts it after an error.
 ///
 /// Nothing is attempted while offline. Built once (keepAlive) and only
 /// listens to its inputs, so rebuilding widgets never starts a sync.

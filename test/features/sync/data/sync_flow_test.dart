@@ -17,6 +17,7 @@ import 'package:notevalult/features/notes/data/datasources/firestore_note_remote
 import 'package:notevalult/features/notes/data/repositories/note_remote_repository_impl.dart';
 import 'package:notevalult/features/notes/data/repositories/note_repository_impl.dart';
 import 'package:notevalult/features/notes/domain/entities/note.dart';
+import 'package:notevalult/features/notes/domain/entities/remote_note_change.dart';
 import 'package:notevalult/features/notes/domain/repositories/note_remote_repository.dart';
 import 'package:notevalult/features/sync/data/repositories/sync_repository_impl.dart';
 import 'package:notevalult/features/tags/data/datasources/drift_tag_local_data_source.dart';
@@ -57,6 +58,30 @@ class _ControlledRemote implements NoteRemoteRepository {
     await _before(noteId);
     await inner.deleteNoteIfExists(userId, noteId);
   }
+
+  @override
+  Future<Note?> upsertUnlessNewer(
+    String userId,
+    Note note, {
+    String? folderName,
+  }) async {
+    await _before(note.id);
+    return inner.upsertUnlessNewer(userId, note, folderName: folderName);
+  }
+
+  @override
+  Future<Note?> deleteUnlessEdited(
+    String userId,
+    String noteId,
+    int deletedVersion,
+  ) async {
+    await _before(noteId);
+    return inner.deleteUnlessEdited(userId, noteId, deletedVersion);
+  }
+
+  @override
+  Stream<List<RemoteNoteChange>> watchChanges(String userId) =>
+      inner.watchChanges(userId);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -102,6 +127,10 @@ class _Session {
       queue: queue,
       localNotes: notes,
       remoteNotes: this.remote,
+      folders: folders,
+      transactions: runner,
+      idGenerator: SequenceIdGenerator(),
+      clock: () => DateTime.utc(2026, 12),
     );
   }
 
@@ -342,6 +371,10 @@ void main() {
 
 class _BrokenOutbox implements SyncOutbox {
   @override
-  Future<void> record(String entityType, String entityId, SyncOperation op) =>
-      throw StateError('disk full');
+  Future<void> record(
+    String entityType,
+    String entityId,
+    SyncOperation op, {
+    int? entityVersion,
+  }) => throw StateError('disk full');
 }

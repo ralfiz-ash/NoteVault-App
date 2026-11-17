@@ -30,6 +30,7 @@ class TagRepositoryImpl implements TagRepository {
   Future<void> _queueNotesUsing(String tagId) async {
     final box = outbox;
     if (box == null) return;
+    await local.bumpNoteVersions(tagId);
     for (final noteId in await local.noteIdsWithTag(tagId)) {
       await box.record(SyncEntity.note, noteId, SyncOperation.update);
     }

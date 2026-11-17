@@ -17,6 +17,9 @@ class Notes extends Table {
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
 
+  /// Sync revision (schema version 4); see `Note.version`.
+  IntColumn get version => integer().withDefault(const Constant(1))();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }

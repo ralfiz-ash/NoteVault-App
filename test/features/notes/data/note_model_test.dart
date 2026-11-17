@@ -51,10 +51,12 @@ void main() {
         folderId: null,
         createdAt: 1000,
         updatedAt: 2000,
+        version: 3,
       );
 
       final model = row.toModel(['a']);
       expect(model.tags, ['a']);
+      expect(model.version, 3);
       expect(
         model.createdAt,
         DateTime.fromMillisecondsSinceEpoch(1000, isUtc: true),

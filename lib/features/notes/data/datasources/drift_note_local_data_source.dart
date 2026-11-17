@@ -73,6 +73,14 @@ class DriftNoteLocalDataSource implements NoteLocalDataSource {
   }
 
   @override
+  Future<void> upsertNote(NoteModel note) {
+    return _db.transaction(() async {
+      await _db.into(_db.notes).insertOnConflictUpdate(note.toCompanion());
+      await _replaceTags(note.id, note.tags);
+    });
+  }
+
+  @override
   Future<bool> deleteNote(String id) async {
     // Links in note_tags are removed by ON DELETE CASCADE.
     final removed = await (_db.delete(

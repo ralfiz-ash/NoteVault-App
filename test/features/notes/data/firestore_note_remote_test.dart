@@ -178,4 +178,20 @@ class _ThrowingRemote implements NoteRemoteDataSource {
   @override
   Future<void> deleteNoteIfExists(String userId, String noteId) =>
       Future.error(error);
+  @override
+  Future<NoteModel?> upsertIf(
+    String userId,
+    NoteModel note, {
+    String? folderName,
+    required bool Function(NoteModel? cloud) shouldWrite,
+  }) => Future.error(error);
+  @override
+  Future<NoteModel?> deleteUnless(
+    String userId,
+    String noteId, {
+    required bool Function(NoteModel cloud) keep,
+  }) => Future.error(error);
+  @override
+  Stream<List<RemoteModelChange>> watchChanges(String userId) =>
+      Stream.error(error);
 }

@@ -7,6 +7,7 @@ class Note {
     required this.updatedAt,
     this.folderId,
     this.tags = const [],
+    this.version = 1,
   });
 
   /// Stable id generated on the device, so it stays the same across storage
@@ -23,12 +24,18 @@ class Note {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  /// Revision counter used for sync: 1 when created, +1 for every local
+  /// change. The same number means the same revision on every device and in
+  /// the cloud (see `NoteVersioning`).
+  final int version;
+
   Note copyWith({
     String? title,
     String? content,
     String? Function()? folderId,
     List<String>? tags,
     DateTime? updatedAt,
+    int? version,
   }) {
     return Note(
       id: id,
@@ -38,6 +45,7 @@ class Note {
       tags: tags ?? this.tags,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      version: version ?? this.version,
     );
   }
 
@@ -50,7 +58,8 @@ class Note {
       other.folderId == folderId &&
       _sameList(other.tags, tags) &&
       other.createdAt == createdAt &&
-      other.updatedAt == updatedAt;
+      other.updatedAt == updatedAt &&
+      other.version == version;
 
   @override
   int get hashCode => Object.hash(
@@ -61,6 +70,7 @@ class Note {
     Object.hashAll(tags),
     createdAt,
     updatedAt,
+    version,
   );
 
   @override

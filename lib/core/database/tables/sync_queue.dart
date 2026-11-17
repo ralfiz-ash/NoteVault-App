@@ -21,6 +21,12 @@ class SyncQueue extends Table {
   /// Bumped on every local change; a sync only completes the row if the
   /// version it uploaded is still the latest.
   IntColumn get version => integer().withDefault(const Constant(1))();
+
+  /// The entity's own sync revision when queued (schema version 4). For a
+  /// delete: the revision that was deleted, so a newer edit made elsewhere
+  /// can win over it.
+  IntColumn get entityVersion => integer().nullable()();
+
   IntColumn get retryCount => integer().withDefault(const Constant(0))();
   TextColumn get lastError => text().nullable()();
 

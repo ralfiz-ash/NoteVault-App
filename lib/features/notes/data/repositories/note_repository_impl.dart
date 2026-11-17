@@ -35,8 +35,12 @@ class NoteRepositoryImpl implements NoteRepository {
   final SyncOutbox? outbox;
   final LocalTransactionRunner transactions;
 
-  Future<void> _recordSync(String noteId, SyncOperation op) async =>
-      outbox?.record(SyncEntity.note, noteId, op);
+  Future<void> _recordSync(
+    String noteId,
+    SyncOperation op,
+    int version,
+  ) async =>
+      outbox?.record(SyncEntity.note, noteId, op, entityVersion: version);
 
   Future<T> _guard<T>(Future<T> Function() action) =>
       guardFailures(action, mapper: exceptionMapper, logger: logger);
@@ -61,7 +65,7 @@ class NoteRepositoryImpl implements NoteRepository {
   Future<Note> createNote(Note note) => _guard(() async {
     await transactions.run(() async {
       await local.insertNote(NoteModel.fromEntity(note));
-      await _recordSync(note.id, SyncOperation.create);
+      await _recordSync(note.id, SyncOperation.create, note.version);
     });
     return _requireNote(note.id);
   });
@@ -77,11 +81,12 @@ class NoteRepositoryImpl implements NoteRepository {
       tags: note.tags,
       createdAt: existing.createdAt,
       updatedAt: clock(),
+      version: existing.version + 1,
     );
     await transactions.run(() async {
       final found = await local.updateNote(NoteModel.fromEntity(toSave));
       if (!found) throw _notFound(note.id);
-      await _recordSync(note.id, SyncOperation.update);
+      await _recordSync(note.id, SyncOperation.update, toSave.version);
     });
     return _requireNote(note.id);
   });
@@ -89,12 +94,22 @@ class NoteRepositoryImpl implements NoteRepository {
   @override
   Future<void> deleteNote(String id) => _guard(() async {
     await transactions.run(() async {
+      final existing = await local.getNote(id);
       final removed = await local.deleteNote(id);
-      if (!removed) throw _notFound(id);
-      // The id stays in the queue after the note row is gone, so the cloud
-      // copy can still be deleted later.
-      await _recordSync(id, SyncOperation.delete);
+      if (!removed || existing == null) throw _notFound(id);
+      // The id (and deleted revision) stay in the queue after the note row
+      // is gone, so the cloud copy can still be deleted later.
+      await _recordSync(id, SyncOperation.delete, existing.version);
     });
+  });
+
+  @override
+  Future<void> applyRemoteNote(Note note) =>
+      _guard(() => local.upsertNote(NoteModel.fromEntity(note)));
+
+  @override
+  Future<void> applyRemoteDelete(String id) => _guard(() async {
+    await local.deleteNote(id);
   });
 
   Future<Note> _requireNote(String id) async {

@@ -3,6 +3,8 @@ import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/guard.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../domain/entities/note.dart';
+import '../../domain/entities/note_versioning.dart';
+import '../../domain/entities/remote_note_change.dart';
 import '../../domain/repositories/note_remote_repository.dart';
 import '../datasources/note_remote_data_source.dart';
 import '../models/note_model.dart';
@@ -69,6 +71,61 @@ class NoteRemoteRepositoryImpl implements NoteRemoteRepository {
   @override
   Future<void> deleteNoteIfExists(String userId, String noteId) =>
       _guard(() => remote.deleteNoteIfExists(userId, noteId));
+
+  @override
+  Future<Note?> upsertUnlessNewer(
+    String userId,
+    Note note, {
+    String? folderName,
+  }) => _guard(() async {
+    final blocking = await remote.upsertIf(
+      userId,
+      NoteModel.fromEntity(note),
+      folderName: folderName,
+      shouldWrite: (cloud) {
+        if (cloud == null) return true;
+        final cloudNote = cloud.toEntity();
+        return NoteVersioning.isNewer(note, cloudNote) ||
+            NoteVersioning.sameContent(note, cloudNote);
+      },
+    );
+    return blocking?.toEntity();
+  });
+
+  @override
+  Future<Note?> deleteUnlessEdited(
+    String userId,
+    String noteId,
+    int deletedVersion,
+  ) => _guard(() async {
+    final kept = await remote.deleteUnless(
+      userId,
+      noteId,
+      keep: (cloud) => cloud.version > deletedVersion,
+    );
+    return kept?.toEntity();
+  });
+
+  @override
+  Stream<List<RemoteNoteChange>> watchChanges(String userId) =>
+      guardFailureStream(
+        remote
+            .watchChanges(userId)
+            .map(
+              (changes) => [
+                for (final c in changes)
+                  c.model == null
+                      ? RemoteNoteChange.removed(c.noteId)
+                      : RemoteNoteChange.upsert(
+                          c.type,
+                          c.model!.toEntity(),
+                          folderName: c.folderName,
+                        ),
+              ],
+            ),
+        mapper: exceptionMapper,
+        logger: logger,
+      );
 
   Future<Note> _require(String userId, String noteId) async {
     final model = await remote.getNote(userId, noteId);

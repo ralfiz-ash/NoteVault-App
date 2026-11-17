@@ -22,6 +22,7 @@ class SyncQueueEntry {
     required this.version,
     required this.retryCount,
     this.lastError,
+    this.entityVersion,
   });
 
   final String entityType;
@@ -31,6 +32,10 @@ class SyncQueueEntry {
   final int version;
   final int retryCount;
   final String? lastError;
+
+  /// The entity's revision when last queued (for a delete: the deleted
+  /// revision).
+  final int? entityVersion;
 }
 
 /// Counts of queued changes, for "N changes pending" and failure banners.
@@ -50,7 +55,12 @@ class SyncQueueCounts {
 /// Records local changes for later upload. Implemented by [SyncQueueStore];
 /// repositories call it inside the same local transaction as the change.
 abstract interface class SyncOutbox {
-  Future<void> record(String entityType, String entityId, SyncOperation op);
+  Future<void> record(
+    String entityType,
+    String entityId,
+    SyncOperation op, {
+    int? entityVersion,
+  });
 }
 
 /// The persistent sync queue (table `sync_queue`).
@@ -81,7 +91,12 @@ class SyncQueueStore implements SyncOutbox {
         ..where((q) => q.entityType.equals(type) & q.entityId.equals(id));
 
   @override
-  Future<void> record(String entityType, String entityId, SyncOperation op) {
+  Future<void> record(
+    String entityType,
+    String entityId,
+    SyncOperation op, {
+    int? entityVersion,
+  }) {
     return _db.transaction(() async {
       final existing = await _row(entityType, entityId).getSingleOrNull();
       if (existing == null) {
@@ -92,6 +107,7 @@ class SyncQueueStore implements SyncOutbox {
                 entityType: entityType,
                 entityId: entityId,
                 operation: op.name,
+                entityVersion: Value(entityVersion),
                 createdAt: _now,
                 updatedAt: _now,
               ),
@@ -129,6 +145,7 @@ class SyncQueueStore implements SyncOutbox {
           .write(
             SyncQueueCompanion(
               operation: Value(merged.name),
+              entityVersion: Value(entityVersion ?? existing.entityVersion),
               status: Value(SyncItemStatus.pending.name),
               version: Value(existing.version + 1),
               updatedAt: Value(_now),
@@ -220,6 +237,21 @@ class SyncQueueStore implements SyncOutbox {
         ),
       );
 
+  /// The queued change for one entity, if any (any status).
+  Future<SyncQueueEntry?> entry(String entityType, String entityId) async {
+    final row = await _row(entityType, entityId).getSingleOrNull();
+    return row == null ? null : _toEntry(row);
+  }
+
+  /// Drops the queued change for one entity (it no longer needs uploading,
+  /// e.g. the cloud already has an equal or newer state).
+  Future<void> remove(String entityType, String entityId) =>
+      (_db.delete(_db.syncQueue)..where(
+            (q) =>
+                q.entityType.equals(entityType) & q.entityId.equals(entityId),
+          ))
+          .go();
+
   Future<List<SyncQueueEntry>> all() async =>
       (await _db.select(_db.syncQueue).get()).map(_toEntry).toList();
 
@@ -243,5 +275,6 @@ class SyncQueueStore implements SyncOutbox {
     version: row.version,
     retryCount: row.retryCount,
     lastError: row.lastError,
+    entityVersion: row.entityVersion,
   );
 }

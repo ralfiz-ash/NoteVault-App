@@ -31,6 +31,22 @@ Stream<PendingChanges> pendingChanges(Ref ref) {
   );
 }
 
+/// Applies the signed-in user's cloud changes to the local database for as
+/// long as it is listened to. One Firestore listener per user: it is
+/// created when a user signs in and cancelled (by Riverpod) when the user
+/// signs out or changes. Widgets never see this stream; they keep reading
+/// the local notes.
+///
+/// keepAlive: owned by the sync controller for the whole session.
+@Riverpod(keepAlive: true)
+Stream<RemoteSyncReport> remoteSync(Ref ref) {
+  final userId = ref.watch(
+    currentUserIdProvider.select((session) => session.value),
+  );
+  if (userId == null) return const Stream.empty();
+  return ref.watch(syncRepositoryProvider).followRemoteChanges(userId);
+}
+
 @Riverpod(keepAlive: true)
 SyncPendingChanges syncPendingChangesUseCase(Ref ref) =>
     SyncPendingChanges(ref.watch(syncRepositoryProvider));
@@ -53,6 +69,9 @@ Duration syncRetryBaseDelay(Ref ref) => const Duration(seconds: 30);
 /// - new local changes are queued (after a short delay)
 /// - a failed sync, retried with growing delays (30 s, 1, 2, 4, 5 min)
 /// - [syncNow], e.g. the Retry button
+///
+/// It also keeps the cloud -> device direction ([remoteSyncProvider]) alive
+/// and restarts it after an error.
 ///
 /// Nothing is attempted while offline. Built once (keepAlive) and only
 /// listens to its inputs, so rebuilding widgets never starts a sync.
@@ -87,12 +106,30 @@ class SyncController extends _$SyncController {
         }
       },
     );
+    ref.listen(remoteSyncProvider, (_, next) {
+      switch (next) {
+        case AsyncData(:final value) when value.conflicts > 0:
+          state = state.copyWith(conflicts: state.conflicts + value.conflicts);
+        case AsyncError():
+          // Listener ended (e.g. connection or permission problem): start a
+          // fresh one later; the queue keeps local changes safe meanwhile.
+          _remoteRestart?.cancel();
+          _remoteRestart = Timer(
+            ref.read(syncRetryBaseDelayProvider),
+            () => ref.invalidate(remoteSyncProvider),
+          );
+        default:
+      }
+    });
     ref.onDispose(() {
       _timer?.cancel();
       _retryTimer?.cancel();
+      _remoteRestart?.cancel();
     });
     return const SyncState();
   }
+
+  Timer? _remoteRestart;
 
   void _schedule(Duration delay) {
     _timer?.cancel();
@@ -113,6 +150,9 @@ class SyncController extends _$SyncController {
     final report = await ref.read(syncPendingChangesUseCaseProvider)(userId);
     if (!ref.mounted) return;
 
+    if (report.conflicts > 0) {
+      state = state.copyWith(conflicts: state.conflicts + report.conflicts);
+    }
     if (report.hasFailures) {
       state = state.copyWith(
         phase: SyncPhase.failed,

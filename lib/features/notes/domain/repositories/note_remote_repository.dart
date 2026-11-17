@@ -1,4 +1,5 @@
 import '../entities/note.dart';
+import '../entities/remote_note_change.dart';
 
 /// Cloud copy of a user's notes. Knows nothing about Firestore.
 ///
@@ -32,4 +33,27 @@ abstract interface class NoteRemoteRepository {
 
   /// Removes the cloud copy; succeeds if it is already gone. Idempotent.
   Future<void> deleteNoteIfExists(String userId, String noteId);
+
+  /// Writes [note] unless the cloud already has a newer revision (checked
+  /// atomically, see `NoteVersioning`). Returns `null` when written, or the
+  /// newer cloud note (a conflict) without writing.
+  Future<Note?> upsertUnlessNewer(
+    String userId,
+    Note note, {
+    String? folderName,
+  });
+
+  /// Deletes the cloud note unless it was edited after [deletedVersion] on
+  /// another device ("edits win over deletes"). Returns `null` when deleted
+  /// (or already gone), or the newer cloud note without deleting.
+  Future<Note?> deleteUnlessEdited(
+    String userId,
+    String noteId,
+    int deletedVersion,
+  );
+
+  /// Live changes to [userId]'s notes in the cloud. The first event lists
+  /// every note as added (initial sync); later events only what changed.
+  /// Cancel the subscription to stop listening.
+  Stream<List<RemoteNoteChange>> watchChanges(String userId);
 }

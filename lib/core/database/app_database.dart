@@ -21,8 +21,9 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   /// 1: notes, folders, tags, note_tags. 2: tags.color. 3: sync_queue.
+  /// 4: notes.version, sync_queue.entity_version.
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -42,6 +43,11 @@ class AppDatabase extends _$AppDatabase {
           "SELECT 'note', id, 'create', 'pending', 1, 0, updated_at, "
           'updated_at FROM notes',
         );
+      }
+      if (from < 4) {
+        // Existing notes start at revision 1 (the column default).
+        await m.addColumn(notes, notes.version);
+        if (from >= 3) await m.addColumn(syncQueue, syncQueue.entityVersion);
       }
     },
     beforeOpen: (details) async {

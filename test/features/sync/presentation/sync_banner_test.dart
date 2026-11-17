@@ -86,4 +86,19 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
   });
+
+  testWidgets('a resolved conflict shows a one-off notice', (tester) async {
+    await pumpApp(tester, ConnectivityStatus.connected);
+    sync.emitRemote(
+      testUser.uid,
+      const RemoteSyncReport(applied: 1, conflicts: 1),
+    );
+    await tester.pump();
+    await tester.pump();
+    expect(
+      find.textContaining('also changed on another device'),
+      findsOneWidget,
+    );
+    await tester.pump(const Duration(seconds: 10));
+  });
 }

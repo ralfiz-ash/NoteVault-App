@@ -14,6 +14,7 @@ extension NoteRowMapper on NoteRow {
     tags: tags,
     createdAt: DateTime.fromMillisecondsSinceEpoch(createdAt, isUtc: true),
     updatedAt: DateTime.fromMillisecondsSinceEpoch(updatedAt, isUtc: true),
+    version: version,
   );
 }
 
@@ -25,5 +26,6 @@ extension NoteModelRowMapper on NoteModel {
     folderId: Value(folderId),
     createdAt: Value(createdAt.millisecondsSinceEpoch),
     updatedAt: Value(updatedAt.millisecondsSinceEpoch),
+    version: Value(version),
   );
 }

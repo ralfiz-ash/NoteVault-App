@@ -332,6 +332,18 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, NoteRow> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -340,6 +352,7 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, NoteRow> {
     folderId,
     createdAt,
     updatedAt,
+    version,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -396,6 +409,12 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, NoteRow> {
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
     return context;
   }
 
@@ -429,6 +448,10 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, NoteRow> {
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
       )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
     );
   }
 
@@ -449,6 +472,9 @@ class NoteRow extends DataClass implements Insertable<NoteRow> {
   /// Epoch milliseconds (UTC).
   final int createdAt;
   final int updatedAt;
+
+  /// Sync revision (schema version 4); see `Note.version`.
+  final int version;
   const NoteRow({
     required this.id,
     required this.title,
@@ -456,6 +482,7 @@ class NoteRow extends DataClass implements Insertable<NoteRow> {
     this.folderId,
     required this.createdAt,
     required this.updatedAt,
+    required this.version,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -468,6 +495,7 @@ class NoteRow extends DataClass implements Insertable<NoteRow> {
     }
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
+    map['version'] = Variable<int>(version);
     return map;
   }
 
@@ -481,6 +509,7 @@ class NoteRow extends DataClass implements Insertable<NoteRow> {
           : Value(folderId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      version: Value(version),
     );
   }
 
@@ -496,6 +525,7 @@ class NoteRow extends DataClass implements Insertable<NoteRow> {
       folderId: serializer.fromJson<String?>(json['folderId']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      version: serializer.fromJson<int>(json['version']),
     );
   }
   @override
@@ -508,6 +538,7 @@ class NoteRow extends DataClass implements Insertable<NoteRow> {
       'folderId': serializer.toJson<String?>(folderId),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
+      'version': serializer.toJson<int>(version),
     };
   }
 
@@ -518,6 +549,7 @@ class NoteRow extends DataClass implements Insertable<NoteRow> {
     Value<String?> folderId = const Value.absent(),
     int? createdAt,
     int? updatedAt,
+    int? version,
   }) => NoteRow(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -525,6 +557,7 @@ class NoteRow extends DataClass implements Insertable<NoteRow> {
     folderId: folderId.present ? folderId.value : this.folderId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    version: version ?? this.version,
   );
   NoteRow copyWithCompanion(NotesCompanion data) {
     return NoteRow(
@@ -534,6 +567,7 @@ class NoteRow extends DataClass implements Insertable<NoteRow> {
       folderId: data.folderId.present ? data.folderId.value : this.folderId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      version: data.version.present ? data.version.value : this.version,
     );
   }
 
@@ -545,14 +579,15 @@ class NoteRow extends DataClass implements Insertable<NoteRow> {
           ..write('content: $content, ')
           ..write('folderId: $folderId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('version: $version')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode =>
-      Object.hash(id, title, content, folderId, createdAt, updatedAt);
+      Object.hash(id, title, content, folderId, createdAt, updatedAt, version);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -562,7 +597,8 @@ class NoteRow extends DataClass implements Insertable<NoteRow> {
           other.content == this.content &&
           other.folderId == this.folderId &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.version == this.version);
 }
 
 class NotesCompanion extends UpdateCompanion<NoteRow> {
@@ -572,6 +608,7 @@ class NotesCompanion extends UpdateCompanion<NoteRow> {
   final Value<String?> folderId;
   final Value<int> createdAt;
   final Value<int> updatedAt;
+  final Value<int> version;
   final Value<int> rowid;
   const NotesCompanion({
     this.id = const Value.absent(),
@@ -580,6 +617,7 @@ class NotesCompanion extends UpdateCompanion<NoteRow> {
     this.folderId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.version = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   NotesCompanion.insert({
@@ -589,6 +627,7 @@ class NotesCompanion extends UpdateCompanion<NoteRow> {
     this.folderId = const Value.absent(),
     required int createdAt,
     required int updatedAt,
+    this.version = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
@@ -602,6 +641,7 @@ class NotesCompanion extends UpdateCompanion<NoteRow> {
     Expression<String>? folderId,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
+    Expression<int>? version,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -611,6 +651,7 @@ class NotesCompanion extends UpdateCompanion<NoteRow> {
       if (folderId != null) 'folder_id': folderId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (version != null) 'version': version,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -622,6 +663,7 @@ class NotesCompanion extends UpdateCompanion<NoteRow> {
     Value<String?>? folderId,
     Value<int>? createdAt,
     Value<int>? updatedAt,
+    Value<int>? version,
     Value<int>? rowid,
   }) {
     return NotesCompanion(
@@ -631,6 +673,7 @@ class NotesCompanion extends UpdateCompanion<NoteRow> {
       folderId: folderId ?? this.folderId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      version: version ?? this.version,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -656,6 +699,9 @@ class NotesCompanion extends UpdateCompanion<NoteRow> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -671,6 +717,7 @@ class NotesCompanion extends UpdateCompanion<NoteRow> {
           ..write('folderId: $folderId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('version: $version, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1204,6 +1251,17 @@ class $SyncQueueTable extends SyncQueue
     requiredDuringInsert: false,
     defaultValue: const Constant(1),
   );
+  static const VerificationMeta _entityVersionMeta = const VerificationMeta(
+    'entityVersion',
+  );
+  @override
+  late final GeneratedColumn<int> entityVersion = GeneratedColumn<int>(
+    'entity_version',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _retryCountMeta = const VerificationMeta(
     'retryCount',
   );
@@ -1256,6 +1314,7 @@ class $SyncQueueTable extends SyncQueue
     operation,
     status,
     version,
+    entityVersion,
     retryCount,
     lastError,
     createdAt,
@@ -1307,6 +1366,15 @@ class $SyncQueueTable extends SyncQueue
       context.handle(
         _versionMeta,
         version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('entity_version')) {
+      context.handle(
+        _entityVersionMeta,
+        entityVersion.isAcceptableOrUnknown(
+          data['entity_version']!,
+          _entityVersionMeta,
+        ),
       );
     }
     if (data.containsKey('retry_count')) {
@@ -1366,6 +1434,10 @@ class $SyncQueueTable extends SyncQueue
         DriftSqlType.int,
         data['${effectivePrefix}version'],
       )!,
+      entityVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}entity_version'],
+      ),
       retryCount: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}retry_count'],
@@ -1405,6 +1477,11 @@ class SyncQueueRow extends DataClass implements Insertable<SyncQueueRow> {
   /// Bumped on every local change; a sync only completes the row if the
   /// version it uploaded is still the latest.
   final int version;
+
+  /// The entity's own sync revision when queued (schema version 4). For a
+  /// delete: the revision that was deleted, so a newer edit made elsewhere
+  /// can win over it.
+  final int? entityVersion;
   final int retryCount;
   final String? lastError;
 
@@ -1417,6 +1494,7 @@ class SyncQueueRow extends DataClass implements Insertable<SyncQueueRow> {
     required this.operation,
     required this.status,
     required this.version,
+    this.entityVersion,
     required this.retryCount,
     this.lastError,
     required this.createdAt,
@@ -1430,6 +1508,9 @@ class SyncQueueRow extends DataClass implements Insertable<SyncQueueRow> {
     map['operation'] = Variable<String>(operation);
     map['status'] = Variable<String>(status);
     map['version'] = Variable<int>(version);
+    if (!nullToAbsent || entityVersion != null) {
+      map['entity_version'] = Variable<int>(entityVersion);
+    }
     map['retry_count'] = Variable<int>(retryCount);
     if (!nullToAbsent || lastError != null) {
       map['last_error'] = Variable<String>(lastError);
@@ -1446,6 +1527,9 @@ class SyncQueueRow extends DataClass implements Insertable<SyncQueueRow> {
       operation: Value(operation),
       status: Value(status),
       version: Value(version),
+      entityVersion: entityVersion == null && nullToAbsent
+          ? const Value.absent()
+          : Value(entityVersion),
       retryCount: Value(retryCount),
       lastError: lastError == null && nullToAbsent
           ? const Value.absent()
@@ -1466,6 +1550,7 @@ class SyncQueueRow extends DataClass implements Insertable<SyncQueueRow> {
       operation: serializer.fromJson<String>(json['operation']),
       status: serializer.fromJson<String>(json['status']),
       version: serializer.fromJson<int>(json['version']),
+      entityVersion: serializer.fromJson<int?>(json['entityVersion']),
       retryCount: serializer.fromJson<int>(json['retryCount']),
       lastError: serializer.fromJson<String?>(json['lastError']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
@@ -1481,6 +1566,7 @@ class SyncQueueRow extends DataClass implements Insertable<SyncQueueRow> {
       'operation': serializer.toJson<String>(operation),
       'status': serializer.toJson<String>(status),
       'version': serializer.toJson<int>(version),
+      'entityVersion': serializer.toJson<int?>(entityVersion),
       'retryCount': serializer.toJson<int>(retryCount),
       'lastError': serializer.toJson<String?>(lastError),
       'createdAt': serializer.toJson<int>(createdAt),
@@ -1494,6 +1580,7 @@ class SyncQueueRow extends DataClass implements Insertable<SyncQueueRow> {
     String? operation,
     String? status,
     int? version,
+    Value<int?> entityVersion = const Value.absent(),
     int? retryCount,
     Value<String?> lastError = const Value.absent(),
     int? createdAt,
@@ -1504,6 +1591,9 @@ class SyncQueueRow extends DataClass implements Insertable<SyncQueueRow> {
     operation: operation ?? this.operation,
     status: status ?? this.status,
     version: version ?? this.version,
+    entityVersion: entityVersion.present
+        ? entityVersion.value
+        : this.entityVersion,
     retryCount: retryCount ?? this.retryCount,
     lastError: lastError.present ? lastError.value : this.lastError,
     createdAt: createdAt ?? this.createdAt,
@@ -1518,6 +1608,9 @@ class SyncQueueRow extends DataClass implements Insertable<SyncQueueRow> {
       operation: data.operation.present ? data.operation.value : this.operation,
       status: data.status.present ? data.status.value : this.status,
       version: data.version.present ? data.version.value : this.version,
+      entityVersion: data.entityVersion.present
+          ? data.entityVersion.value
+          : this.entityVersion,
       retryCount: data.retryCount.present
           ? data.retryCount.value
           : this.retryCount,
@@ -1535,6 +1628,7 @@ class SyncQueueRow extends DataClass implements Insertable<SyncQueueRow> {
           ..write('operation: $operation, ')
           ..write('status: $status, ')
           ..write('version: $version, ')
+          ..write('entityVersion: $entityVersion, ')
           ..write('retryCount: $retryCount, ')
           ..write('lastError: $lastError, ')
           ..write('createdAt: $createdAt, ')
@@ -1550,6 +1644,7 @@ class SyncQueueRow extends DataClass implements Insertable<SyncQueueRow> {
     operation,
     status,
     version,
+    entityVersion,
     retryCount,
     lastError,
     createdAt,
@@ -1564,6 +1659,7 @@ class SyncQueueRow extends DataClass implements Insertable<SyncQueueRow> {
           other.operation == this.operation &&
           other.status == this.status &&
           other.version == this.version &&
+          other.entityVersion == this.entityVersion &&
           other.retryCount == this.retryCount &&
           other.lastError == this.lastError &&
           other.createdAt == this.createdAt &&
@@ -1576,6 +1672,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueRow> {
   final Value<String> operation;
   final Value<String> status;
   final Value<int> version;
+  final Value<int?> entityVersion;
   final Value<int> retryCount;
   final Value<String?> lastError;
   final Value<int> createdAt;
@@ -1587,6 +1684,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueRow> {
     this.operation = const Value.absent(),
     this.status = const Value.absent(),
     this.version = const Value.absent(),
+    this.entityVersion = const Value.absent(),
     this.retryCount = const Value.absent(),
     this.lastError = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -1599,6 +1697,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueRow> {
     required String operation,
     this.status = const Value.absent(),
     this.version = const Value.absent(),
+    this.entityVersion = const Value.absent(),
     this.retryCount = const Value.absent(),
     this.lastError = const Value.absent(),
     required int createdAt,
@@ -1615,6 +1714,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueRow> {
     Expression<String>? operation,
     Expression<String>? status,
     Expression<int>? version,
+    Expression<int>? entityVersion,
     Expression<int>? retryCount,
     Expression<String>? lastError,
     Expression<int>? createdAt,
@@ -1627,6 +1727,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueRow> {
       if (operation != null) 'operation': operation,
       if (status != null) 'status': status,
       if (version != null) 'version': version,
+      if (entityVersion != null) 'entity_version': entityVersion,
       if (retryCount != null) 'retry_count': retryCount,
       if (lastError != null) 'last_error': lastError,
       if (createdAt != null) 'created_at': createdAt,
@@ -1641,6 +1742,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueRow> {
     Value<String>? operation,
     Value<String>? status,
     Value<int>? version,
+    Value<int?>? entityVersion,
     Value<int>? retryCount,
     Value<String?>? lastError,
     Value<int>? createdAt,
@@ -1653,6 +1755,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueRow> {
       operation: operation ?? this.operation,
       status: status ?? this.status,
       version: version ?? this.version,
+      entityVersion: entityVersion ?? this.entityVersion,
       retryCount: retryCount ?? this.retryCount,
       lastError: lastError ?? this.lastError,
       createdAt: createdAt ?? this.createdAt,
@@ -1678,6 +1781,9 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueRow> {
     }
     if (version.present) {
       map['version'] = Variable<int>(version.value);
+    }
+    if (entityVersion.present) {
+      map['entity_version'] = Variable<int>(entityVersion.value);
     }
     if (retryCount.present) {
       map['retry_count'] = Variable<int>(retryCount.value);
@@ -1705,6 +1811,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueRow> {
           ..write('operation: $operation, ')
           ..write('status: $status, ')
           ..write('version: $version, ')
+          ..write('entityVersion: $entityVersion, ')
           ..write('retryCount: $retryCount, ')
           ..write('lastError: $lastError, ')
           ..write('createdAt: $createdAt, ')
@@ -2027,6 +2134,7 @@ typedef $$NotesTableCreateCompanionBuilder = NotesCompanion Function({
   Value<String?> folderId,
   required int createdAt,
   required int updatedAt,
+  Value<int> version,
   Value<int> rowid,
 });
 typedef $$NotesTableUpdateCompanionBuilder = NotesCompanion Function({
@@ -2036,6 +2144,7 @@ typedef $$NotesTableUpdateCompanionBuilder = NotesCompanion Function({
   Value<String?> folderId,
   Value<int> createdAt,
   Value<int> updatedAt,
+  Value<int> version,
   Value<int> rowid,
 });
 
@@ -2109,6 +2218,11 @@ class $$NotesTableFilterComposer extends Composer<_$AppDatabase, $NotesTable> {
 
   ColumnFilters<int> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2195,6 +2309,11 @@ class $$NotesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$FoldersTableOrderingComposer get folderId {
     final $$FoldersTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -2242,6 +2361,9 @@ class $$NotesTableAnnotationComposer
 
   GeneratedColumn<int> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
 
   $$FoldersTableAnnotationComposer get folderId {
     final $$FoldersTableAnnotationComposer composer = $composerBuilder(
@@ -2326,6 +2448,7 @@ class $$NotesTableTableManager
                 Value<String?> folderId = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => NotesCompanion(
                 id: id,
@@ -2334,6 +2457,7 @@ class $$NotesTableTableManager
                 folderId: folderId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                version: version,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2344,6 +2468,7 @@ class $$NotesTableTableManager
                 Value<String?> folderId = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
+                Value<int> version = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => NotesCompanion.insert(
                 id: id,
@@ -2352,6 +2477,7 @@ class $$NotesTableTableManager
                 folderId: folderId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                version: version,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -3031,6 +3157,7 @@ typedef $$SyncQueueTableCreateCompanionBuilder = SyncQueueCompanion Function({
   required String operation,
   Value<String> status,
   Value<int> version,
+  Value<int?> entityVersion,
   Value<int> retryCount,
   Value<String?> lastError,
   required int createdAt,
@@ -3043,6 +3170,7 @@ typedef $$SyncQueueTableUpdateCompanionBuilder = SyncQueueCompanion Function({
   Value<String> operation,
   Value<String> status,
   Value<int> version,
+  Value<int?> entityVersion,
   Value<int> retryCount,
   Value<String?> lastError,
   Value<int> createdAt,
@@ -3081,6 +3209,11 @@ class $$SyncQueueTableFilterComposer
 
   ColumnFilters<int> get version => $composableBuilder(
     column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get entityVersion => $composableBuilder(
+    column: $table.entityVersion,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3139,6 +3272,11 @@ class $$SyncQueueTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get entityVersion => $composableBuilder(
+    column: $table.entityVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get retryCount => $composableBuilder(
     column: $table.retryCount,
     builder: (column) => ColumnOrderings(column),
@@ -3185,6 +3323,11 @@ class $$SyncQueueTableAnnotationComposer
 
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<int> get entityVersion => $composableBuilder(
+    column: $table.entityVersion,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get retryCount => $composableBuilder(
     column: $table.retryCount,
@@ -3237,6 +3380,7 @@ class $$SyncQueueTableTableManager
                 Value<String> operation = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<int> version = const Value.absent(),
+                Value<int?> entityVersion = const Value.absent(),
                 Value<int> retryCount = const Value.absent(),
                 Value<String?> lastError = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
@@ -3248,6 +3392,7 @@ class $$SyncQueueTableTableManager
                 operation: operation,
                 status: status,
                 version: version,
+                entityVersion: entityVersion,
                 retryCount: retryCount,
                 lastError: lastError,
                 createdAt: createdAt,
@@ -3261,6 +3406,7 @@ class $$SyncQueueTableTableManager
                 required String operation,
                 Value<String> status = const Value.absent(),
                 Value<int> version = const Value.absent(),
+                Value<int?> entityVersion = const Value.absent(),
                 Value<int> retryCount = const Value.absent(),
                 Value<String?> lastError = const Value.absent(),
                 required int createdAt,
@@ -3272,6 +3418,7 @@ class $$SyncQueueTableTableManager
                 operation: operation,
                 status: status,
                 version: version,
+                entityVersion: entityVersion,
                 retryCount: retryCount,
                 lastError: lastError,
                 createdAt: createdAt,

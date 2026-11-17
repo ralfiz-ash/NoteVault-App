@@ -190,10 +190,23 @@ class FakeNoteRepository implements NoteRepository {
       tags: note.tags,
       createdAt: existing.createdAt,
       updatedAt: clock?.call() ?? note.updatedAt,
+      version: existing.version + 1,
     );
     _notes[note.id] = saved;
     _changes.add(null);
     return saved;
+  }
+
+  @override
+  Future<void> applyRemoteNote(Note note) async {
+    _notes[note.id] = note;
+    _changes.add(null);
+  }
+
+  @override
+  Future<void> applyRemoteDelete(String id) async {
+    _notes.remove(id);
+    _changes.add(null);
   }
 
   @override
@@ -261,6 +274,12 @@ class FakeFolderRepository implements FolderRepository {
 
   @override
   Future<Folder> updateFolder(Folder folder) => createFolder(folder);
+
+  @override
+  Future<void> applyRemoteFolder(Folder folder) async {
+    _folders[folder.id] = folder;
+    _changes.add(null);
+  }
 
   @override
   Future<void> deleteFolder(String id) async {
@@ -356,6 +375,29 @@ class FakeSyncRepository implements SyncRepository {
   Stream<PendingChanges> watchPendingChanges() async* {
     yield _current;
     yield* _controller.stream;
+  }
+
+  /// Users with an active cloud listener right now.
+  final activeListeners = <String>[];
+  final _remote = <String, StreamController<RemoteSyncReport>>{};
+
+  void emitRemote(String userId, RemoteSyncReport report) =>
+      _remote[userId]?.add(report);
+
+  @override
+  Stream<RemoteSyncReport> followRemoteChanges(String userId) {
+    late final StreamController<RemoteSyncReport> controller;
+    controller = StreamController<RemoteSyncReport>(
+      onListen: () {
+        activeListeners.add(userId);
+        _remote[userId] = controller;
+      },
+      onCancel: () {
+        activeListeners.remove(userId);
+        _remote.remove(userId);
+      },
+    );
+    return controller.stream;
   }
 
   @override
