@@ -7,8 +7,8 @@ import '../../../../core/presentation/tag_chip.dart';
 import '../../../folders/presentation/providers/folders_provider.dart';
 import '../../../tags/presentation/providers/tags_provider.dart';
 import '../providers/notes_filter_provider.dart';
-import '../providers/notes_provider.dart';
-import '../state/notes_filter.dart';
+import '../../domain/entities/note_query.dart';
+import '../providers/visible_notes_provider.dart';
 
 /// Navigation for the notes list: all notes, folders (with counts), "No
 /// folder", tags (coloured, with counts), and links to manage folders/tags.
@@ -22,11 +22,21 @@ class NotesDrawer extends ConsumerWidget {
     final folderCounts = ref.watch(folderNoteCountsProvider);
     final tags = ref.watch(tagsProvider).value ?? const [];
     final tagCounts = ref.watch(tagNoteCountsProvider);
-    final total = ref.watch(notesProvider).value?.length ?? 0;
+    final total = ref.watch(
+      visibleNotesProvider.select((notes) => notes.value?.length ?? 0),
+    );
     final theme = Theme.of(context);
+    final controller = ref.read(notesFilterControllerProvider.notifier);
 
-    void select(NotesFilter value) {
-      ref.read(notesFilterControllerProvider.notifier).show(value);
+    // Folder and tag filters combine; tapping the selected one again clears
+    // it.
+    void selectFolder(FolderScope scope) {
+      controller.setFolder(filter.folder == scope ? const AnyFolder() : scope);
+      Navigator.of(context).pop();
+    }
+
+    void selectTag(String tagId) {
+      controller.setTag(filter.tagId == tagId ? null : tagId);
       Navigator.of(context).pop();
     }
 
@@ -60,8 +70,11 @@ class NotesDrawer extends ConsumerWidget {
               icon: Icons.notes,
               label: 'All notes',
               count: total,
-              selected: filter is AllNotes,
-              onTap: () => select(const AllNotes()),
+              selected: !filter.isActive,
+              onTap: () {
+                controller.clear();
+                Navigator.of(context).pop();
+              },
             ),
             section(
               'Folders',
@@ -73,28 +86,28 @@ class NotesDrawer extends ConsumerWidget {
                 icon: Icons.folder_outlined,
                 label: folder.name,
                 count: folderCounts[folder.id] ?? 0,
-                selected: filter == FolderFilter(folder.id),
-                onTap: () => select(FolderFilter(folder.id)),
+                selected: filter.folder == InFolder(folder.id),
+                onTap: () => selectFolder(InFolder(folder.id)),
               ),
             _CountTile(
               icon: Icons.folder_off_outlined,
               label: 'No folder',
               count: folderCounts[null] ?? 0,
-              selected: filter == const FolderFilter(null),
-              onTap: () => select(const FolderFilter(null)),
+              selected: filter.folder == const NoFolder(),
+              onTap: () => selectFolder(const NoFolder()),
             ),
             section('Tags', () => context.push(AppRoutes.tags), 'Manage tags'),
             if (tags.isEmpty)
               const ListTile(dense: true, title: Text('No tags yet')),
             for (final tag in tags)
               ListTile(
-                selected: filter == TagFilter(tag.id),
+                selected: filter.tagId == tag.id,
                 title: Align(
                   alignment: Alignment.centerLeft,
                   child: TagChip(label: tag.name, colorValue: tag.colorValue),
                 ),
                 trailing: Text('${tagCounts[tag.name.toLowerCase()] ?? 0}'),
-                onTap: () => select(TagFilter(tag.id)),
+                onTap: () => selectTag(tag.id),
               ),
           ],
         ),

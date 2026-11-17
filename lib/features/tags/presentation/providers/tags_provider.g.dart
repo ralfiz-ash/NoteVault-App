@@ -116,14 +116,14 @@ final class TagsByNameProvider
 
 String _$tagsByNameHash() => r'7b644322f489ace5a7e60ac2b8250bcbd7865958';
 
-/// Lower-case tag name -> number of notes using it (one pass over the notes;
-/// no query per tag).
+/// Lower-case tag name -> number of notes using it. Derived in one pass from
+/// the same notes the list shows (no query per tag, no stored counts).
 
 @ProviderFor(tagNoteCounts)
 final tagNoteCountsProvider = TagNoteCountsProvider._();
 
-/// Lower-case tag name -> number of notes using it (one pass over the notes;
-/// no query per tag).
+/// Lower-case tag name -> number of notes using it. Derived in one pass from
+/// the same notes the list shows (no query per tag, no stored counts).
 
 final class TagNoteCountsProvider
     extends
@@ -133,8 +133,8 @@ final class TagNoteCountsProvider
           Map<String, int>
         >
     with $Provider<Map<String, int>> {
-  /// Lower-case tag name -> number of notes using it (one pass over the notes;
-  /// no query per tag).
+  /// Lower-case tag name -> number of notes using it. Derived in one pass from
+  /// the same notes the list shows (no query per tag, no stored counts).
   TagNoteCountsProvider._()
     : super(
         from: null,
@@ -168,7 +168,7 @@ final class TagNoteCountsProvider
   }
 }
 
-String _$tagNoteCountsHash() => r'f205ccc46fbf1c43bd8386054de9f99bb135b52d';
+String _$tagNoteCountsHash() => r'c07fe67ed0593feceb12c78e5c453c11c8e831cf';
 
 @ProviderFor(createTag)
 final createTagProvider = CreateTagProvider._();

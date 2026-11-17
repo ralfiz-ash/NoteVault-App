@@ -7,7 +7,7 @@ import 'package:notevalult/features/notes/domain/entities/note.dart';
 import 'package:notevalult/features/notes/presentation/providers/folder_notes_provider.dart';
 import 'package:notevalult/features/notes/presentation/providers/notes_filter_provider.dart';
 import 'package:notevalult/features/notes/presentation/providers/tag_notes_provider.dart';
-import 'package:notevalult/features/notes/presentation/state/notes_filter.dart';
+import 'package:notevalult/features/notes/domain/entities/note_query.dart';
 import 'package:notevalult/features/tags/domain/entities/tag.dart';
 import 'package:notevalult/features/tags/presentation/providers/tags_provider.dart';
 
@@ -112,11 +112,13 @@ void main() {
     container.listen(filteredNotesProvider, (_, _) {});
     final filter = container.read(notesFilterControllerProvider.notifier);
 
-    filter.show(const FolderFilter('B'));
+    filter.setFolder(const InFolder('B'));
     expect(await ids(filteredNotesProvider), ['b1']);
-    filter.show(const TagFilter('th'));
+    filter
+      ..setFolder(const AnyFolder())
+      ..setTag('th');
     expect(await ids(filteredNotesProvider), ['b1']);
-    filter.show(const AllNotes());
+    filter.clear();
     expect((await ids(filteredNotesProvider)).length, 4);
   });
 }

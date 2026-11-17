@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notevalult/features/notes/domain/entities/note_sort.dart';
 import 'package:notevalult/features/settings/domain/entities/app_settings.dart';
 import 'package:notevalult/features/settings/presentation/providers/settings_provider.dart';
 
@@ -9,7 +10,7 @@ void main() {
   test('defaults: system theme, newest edit first', () {
     final settings = createContainer().read(settingsProvider);
     expect(settings.themeMode, ThemeModePreference.system);
-    expect(settings.sortOrder, NoteSortOrder.updatedNewest);
+    expect(settings.noteSort, NoteSort.defaultSort);
   });
 
   test('setThemeMode and setSortOrder update only their field', () {
@@ -21,15 +22,14 @@ void main() {
       container.read(settingsProvider).themeMode,
       ThemeModePreference.dark,
     );
-    expect(
-      container.read(settingsProvider).sortOrder,
-      NoteSortOrder.updatedNewest,
-    );
+    expect(container.read(settingsProvider).noteSort, NoteSort.defaultSort);
 
-    notifier.setSortOrder(NoteSortOrder.titleAscending);
+    notifier.setNoteSort(
+      const NoteSort(field: NoteSortField.title, ascending: true),
+    );
     expect(
-      container.read(settingsProvider).sortOrder,
-      NoteSortOrder.titleAscending,
+      container.read(settingsProvider).noteSort,
+      const NoteSort(field: NoteSortField.title, ascending: true),
     );
     expect(
       container.read(settingsProvider).themeMode,
@@ -47,7 +47,9 @@ void main() {
 
     container.read(settingsProvider.notifier)
       ..setThemeMode(ThemeModePreference.light)
-      ..setSortOrder(NoteSortOrder.createdNewest) // not a theme change
+      ..setNoteSort(
+        const NoteSort(field: NoteSortField.created),
+      ) // not a theme change
       ..setThemeMode(ThemeModePreference.dark);
 
     expect(seen, [ThemeModePreference.light, ThemeModePreference.dark]);

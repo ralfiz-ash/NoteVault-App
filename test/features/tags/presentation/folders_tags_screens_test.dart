@@ -78,11 +78,13 @@ void main() {
     expect(find.text('Alpha note'), findsOneWidget);
     expect(find.text('Beta note'), findsNothing);
 
+    // Folder AND tag combine: Alpha has no "Unused" note.
     await openDrawer(tester);
     await tap(tester, find.widgetWithText(ListTile, 'Unused'));
-    expect(find.text('No notes here'), findsOneWidget);
+    expect(find.text('No notes found'), findsOneWidget);
+    expect(find.text('No notes match the current filters.'), findsOneWidget);
 
-    await tap(tester, find.text('Show all notes'));
+    await tap(tester, find.text('Clear filters'));
     expect(find.text('Beta note'), findsOneWidget);
   });
 

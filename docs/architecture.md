@@ -366,6 +366,41 @@ Delete (list/view) - DeleteNoteController + PendingNoteDeletions (optimistic)
   - `folderNoteCountsProvider` and `tagNoteCountsProvider`: one pass over the
     notes.
 
+## Search and derived state (Phase 9)
+
+```
+notesProvider (database watch)
+   -> visibleNotesProvider (minus deletions in progress)
+        |-> folderNoteCountsProvider / tagNoteCountsProvider   (counts)
+        '-> filteredNotesProvider = noteQuery.apply(visible notes)   (list)
+                 noteQueryProvider <- noteSearchController (debounced)
+                                   <- notesFilterController (folder, tag)
+                                   <- settingsProvider.select(noteSort)
+                                   <- tagsProvider.select(selected tag name)
+```
+
+- **One source, derived views**: the list, the counts and the filters all
+  come from the same notes in memory; nothing filtered or counted is stored.
+  Typing never queries the database.
+- **`NoteQuery` (domain, pure Dart)** is the only matching/sorting logic:
+  case-insensitive substring search in title and content, folder scope
+  (any / none / one folder), tag (by name, ignoring case), combined with AND;
+  `NoteSort` = field (edited, created, title) + direction, comparing the
+  stored UTC instants, ties broken by id. Widgets never filter or sort.
+- **Debounce**: `NoteSearchController.onInput` restarts a 300 ms timer
+  (`searchDebounceProvider`); only the last text is applied, unchanged text
+  causes no update, and the timer is cancelled on dispose or user change.
+  "Clear" applies immediately (`setNow`).
+- **Rebuild scoping**: `noteQueryProvider` watches only the sort (not the
+  theme) and only the selected tag's name (not every tag colour); `NoteQuery`
+  has value equality, so unchanged inputs stop there. Tests count updates
+  with a `ProviderObserver`.
+- **Sort setting**: `AppSettings.noteSort` (persisted in the Settings phase);
+  the list's sort sheet changes it.
+- **Empty states**: "No notes yet" (no notes at all) is separate from "No
+  notes found" (filters/search match nothing), with a specific message for
+  search, folder, tag or combinations. Errors stay errors.
+
 ## Adding a feature
 
 1. Create `features/<name>/{domain,data,presentation}` with the subfolders above.

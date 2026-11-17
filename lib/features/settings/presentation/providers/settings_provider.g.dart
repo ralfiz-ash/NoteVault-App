@@ -8,7 +8,7 @@ part of 'settings_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// App settings (theme mode and note sort order) and how to change them.
+/// App settings (theme mode and notes sort) and how to change them.
 ///
 /// Held in memory for now; loading/saving through `SettingsRepository` is
 /// added in the Settings phase without changing this provider's API.
@@ -23,7 +23,7 @@ part of 'settings_provider.dart';
 @ProviderFor(Settings)
 final settingsProvider = SettingsProvider._();
 
-/// App settings (theme mode and note sort order) and how to change them.
+/// App settings (theme mode and notes sort) and how to change them.
 ///
 /// Held in memory for now; loading/saving through `SettingsRepository` is
 /// added in the Settings phase without changing this provider's API.
@@ -35,7 +35,7 @@ final settingsProvider = SettingsProvider._();
 /// keepAlive: settings are app-wide and must not reset to defaults when no
 /// screen happens to be listening.
 final class SettingsProvider extends $NotifierProvider<Settings, AppSettings> {
-  /// App settings (theme mode and note sort order) and how to change them.
+  /// App settings (theme mode and notes sort) and how to change them.
   ///
   /// Held in memory for now; loading/saving through `SettingsRepository` is
   /// added in the Settings phase without changing this provider's API.
@@ -73,9 +73,9 @@ final class SettingsProvider extends $NotifierProvider<Settings, AppSettings> {
   }
 }
 
-String _$settingsHash() => r'e12997de51b07096b3bc36a67c147b637854b771';
+String _$settingsHash() => r'c161f83ddca19094afae44a55155b59f7b7098f2';
 
-/// App settings (theme mode and note sort order) and how to change them.
+/// App settings (theme mode and notes sort) and how to change them.
 ///
 /// Held in memory for now; loading/saving through `SettingsRepository` is
 /// added in the Settings phase without changing this provider's API.
