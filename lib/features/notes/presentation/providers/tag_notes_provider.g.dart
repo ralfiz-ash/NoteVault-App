@@ -12,6 +12,9 @@ part of 'tag_notes_provider.dart';
 /// [visibleNotesProvider] and [tagsProvider] (notes store tag names; tags
 /// map ids to names, matched ignoring case), so renaming a tag keeps the
 /// filter working. One instance per tag id, auto-disposed when unused.
+///
+/// Only the tag's name is watched, so recolouring a tag does not recompute
+/// this list.
 
 @ProviderFor(tagNotes)
 final tagNotesProvider = TagNotesFamily._();
@@ -20,6 +23,9 @@ final tagNotesProvider = TagNotesFamily._();
 /// [visibleNotesProvider] and [tagsProvider] (notes store tag names; tags
 /// map ids to names, matched ignoring case), so renaming a tag keeps the
 /// filter working. One instance per tag id, auto-disposed when unused.
+///
+/// Only the tag's name is watched, so recolouring a tag does not recompute
+/// this list.
 
 final class TagNotesProvider
     extends
@@ -33,6 +39,9 @@ final class TagNotesProvider
   /// [visibleNotesProvider] and [tagsProvider] (notes store tag names; tags
   /// map ids to names, matched ignoring case), so renaming a tag keeps the
   /// filter working. One instance per tag id, auto-disposed when unused.
+  ///
+  /// Only the tag's name is watched, so recolouring a tag does not recompute
+  /// this list.
   TagNotesProvider._({
     required TagNotesFamily super.from,
     required String super.argument,
@@ -85,12 +94,15 @@ final class TagNotesProvider
   }
 }
 
-String _$tagNotesHash() => r'7ec6e79deaa6764e7141c338ac4c099a8608a528';
+String _$tagNotesHash() => r'1c3c2973c8e189c6b241dda1a7928063f3bfc62e';
 
 /// Notes that use the tag [tagId], in list order. Derived from
 /// [visibleNotesProvider] and [tagsProvider] (notes store tag names; tags
 /// map ids to names, matched ignoring case), so renaming a tag keeps the
 /// filter working. One instance per tag id, auto-disposed when unused.
+///
+/// Only the tag's name is watched, so recolouring a tag does not recompute
+/// this list.
 
 final class TagNotesFamily extends $Family
     with $FunctionalFamilyOverride<AsyncValue<List<Note>>, String> {
@@ -107,6 +119,9 @@ final class TagNotesFamily extends $Family
   /// [visibleNotesProvider] and [tagsProvider] (notes store tag names; tags
   /// map ids to names, matched ignoring case), so renaming a tag keeps the
   /// filter working. One instance per tag id, auto-disposed when unused.
+  ///
+  /// Only the tag's name is watched, so recolouring a tag does not recompute
+  /// this list.
 
   TagNotesProvider call(String tagId) =>
       TagNotesProvider._(argument: tagId, from: this);

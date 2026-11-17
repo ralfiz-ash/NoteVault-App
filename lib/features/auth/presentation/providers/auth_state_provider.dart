@@ -1,6 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../app/di/firebase_providers.dart';
+import '../../../../core/usecase/usecase.dart';
+import '../../domain/usecases/observe_auth_state.dart';
 import '../state/auth_state.dart';
 
 part 'auth_state_provider.g.dart';
@@ -15,9 +17,7 @@ part 'auth_state_provider.g.dart';
 /// last listener goes away would briefly show a loading state again.
 @Riverpod(keepAlive: true)
 Stream<AuthState> authState(Ref ref) {
-  return ref
-      .watch(authRepositoryProvider)
-      .authStateChanges()
+  return ObserveAuthState(ref.watch(authRepositoryProvider))(const NoParams())
       .map<AuthState>(
         (user) => user == null ? const Unauthenticated() : Authenticated(user),
       );

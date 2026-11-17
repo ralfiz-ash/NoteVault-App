@@ -497,7 +497,7 @@ SyncRepositoryImpl (upload: queue)          SyncRepositoryImpl.followRemoteChang
 ## Settings (Phase 12)
 
 ```
-SettingsScreen / notes sort sheet -> Settings (AsyncNotifier) -> LoadSettings / SaveSettings
+SettingsScreen / notes sort sheet -> Settings (Notifier)      -> LoadSettings / SaveSettings
       ^                                     |                     -> SettingsRepository
       | select                              |                     -> preferences table
 MaterialApp.themeMode <- themeModePreferenceProvider            (in the user's own database)
@@ -512,9 +512,11 @@ filteredNotesProvider <- noteQuery <- noteSortSettingProvider
   Values are plain text (`dark`, `title`, `ascending`); unknown or malformed
   values load as the defaults. Settings are local only: not synced, never
   queued, work offline.
-- **Lifecycle**: signed out -> defaults (nothing stored); sign-in or app start
-  -> that user's settings load; sign-out / another user -> rebuilt, so
-  nothing carries over. Changes apply at once, then save; a failed save
+- **Lifecycle**: a synchronous `Notifier` (no loading state): signed out ->
+  defaults (nothing stored); sign-in or app start -> the defaults at once,
+  replaced by that user's saved settings when read (a change made before the
+  read finishes wins); sign-out / another user -> rebuilt, so nothing carries
+  over. Changes apply at once, then save; a failed save
   keeps the change for this run and the screen says it could not be saved.
 - **One sort**: the Settings screen and the list's sort sheet both call
   `Settings.setNoteSort`; `noteQueryProvider` reads it through

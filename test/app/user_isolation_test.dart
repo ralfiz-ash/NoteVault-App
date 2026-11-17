@@ -98,19 +98,20 @@ void main() {
   test('settings reset when the user changes', () async {
     await signIn(alice);
     container.listen(settingsProvider, (_, _) {});
-    await container.read(settingsProvider.future);
+    await pumpEventQueue();
     await container
         .read(settingsProvider.notifier)
         .setThemeMode(ThemeModePreference.dark);
 
     await signIn(null);
     expect(
-      container.read(settingsProvider).value?.themeMode,
+      container.read(settingsProvider).themeMode,
       ThemeModePreference.system,
     );
     await signIn(bob);
+    await pumpEventQueue();
     expect(
-      (await container.read(settingsProvider.future)).themeMode,
+      container.read(settingsProvider).themeMode,
       ThemeModePreference.system,
     );
   });

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:drift/native.dart';
@@ -44,7 +45,13 @@ class _App {
   final FakeAuthRepository auth;
   late final ProviderContainer container;
 
-  Future<AppSettings> settings() => container.read(settingsProvider.future);
+  /// The settings once this user's saved values have been read.
+  Future<AppSettings> settings() async {
+    for (var i = 0; i < 3; i++) {
+      await pumpEventQueue();
+    }
+    return container.read(settingsProvider);
+  }
 
   Settings get notifier => container.read(settingsProvider.notifier);
 
@@ -72,11 +79,12 @@ void main() {
   }
 
   test(
-    'defaults: system theme, edited newest first; loading -> ready',
+    'defaults: system theme, edited newest first, available at once',
     () async {
       final app = _App(dir, user: alice);
       addTearDown(app.dispose);
-      expect(app.container.read(settingsProvider).isLoading, isTrue);
+      // Synchronous: the defaults are there before anything is read.
+      expect(app.container.read(settingsProvider), const AppSettings());
 
       final settings = await app.settings();
       expect(settings.themeMode, ThemeModePreference.system);
@@ -89,7 +97,7 @@ void main() {
       final app = await start();
       await app.settings();
       final saved = app.notifier.setThemeMode(mode);
-      expect(app.container.read(settingsProvider).value!.themeMode, mode);
+      expect(app.container.read(settingsProvider).themeMode, mode);
       expect(await saved, isTrue);
       app.dispose();
 
@@ -141,7 +149,7 @@ void main() {
     await app.notifier.setNoteSort(NoteSort.defaultSort);
 
     await app.signIn(null); // logout -> defaults, nothing of Alice's
-    expect(app.container.read(settingsProvider).value, const AppSettings());
+    expect(app.container.read(settingsProvider), const AppSettings());
 
     await app.signIn(bob);
     expect(await app.settings(), const AppSettings()); // not Alice's
@@ -197,6 +205,47 @@ void main() {
   });
 
   group('with fakes', () {
+    test('a change made before the saved settings load is kept', () async {
+      final repo = FakeSettingsRepository(
+        const AppSettings(themeMode: ThemeModePreference.dark),
+      )..loadGate = Completer<void>();
+      final c = createContainer(
+        overrides: [
+          settingsRepositoryProvider.overrideWithValue(repo),
+          signedInOverride(),
+        ],
+      );
+      c.listen(settingsProvider, (_, _) {});
+      await pumpEventQueue(); // signed in; the load is waiting
+
+      expect(
+        await c
+            .read(settingsProvider.notifier)
+            .setThemeMode(ThemeModePreference.light),
+        isTrue,
+      );
+      repo.loadGate!.complete(); // the stored (older) "dark" arrives late
+      await pumpEventQueue();
+
+      expect(c.read(themeModePreferenceProvider), ThemeModePreference.light);
+    });
+
+    test('saved settings replace the defaults once loaded', () async {
+      final repo = FakeSettingsRepository(
+        const AppSettings(themeMode: ThemeModePreference.dark),
+      );
+      final c = createContainer(
+        overrides: [
+          settingsRepositoryProvider.overrideWithValue(repo),
+          signedInOverride(),
+        ],
+      );
+      c.listen(settingsProvider, (_, _) {});
+      expect(c.read(themeModePreferenceProvider), ThemeModePreference.system);
+      await pumpEventQueue();
+      expect(c.read(themeModePreferenceProvider), ThemeModePreference.dark);
+    });
+
     test('a failed save is reported, the change still applies', () async {
       final repo = FakeSettingsRepository()..failSaves = true;
       final c = createContainer(
@@ -206,7 +255,7 @@ void main() {
         ],
       );
       c.listen(settingsProvider, (_, _) {});
-      await c.read(settingsProvider.future);
+      await pumpEventQueue();
 
       final saved = await c
           .read(settingsProvider.notifier)
@@ -232,7 +281,7 @@ void main() {
         ],
       );
       c.listen(filteredNotesProvider, (_, _) {});
-      await c.read(settingsProvider.future);
+      await pumpEventQueue();
       Future<List<String>> order() async => [
         for (final n in await readFuture(c, filteredNotesProvider)) n.id,
       ];

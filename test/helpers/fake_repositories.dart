@@ -423,8 +423,14 @@ class FakeSettingsRepository implements SettingsRepository {
   bool failSaves = false;
   int saves = 0;
 
+  /// When set, loads wait for it (to test changes made before a load ends).
+  Completer<void>? loadGate;
+
   @override
-  Future<AppSettings> loadSettings() async => stored ?? const AppSettings();
+  Future<AppSettings> loadSettings() async {
+    await loadGate?.future;
+    return stored ?? const AppSettings();
+  }
 
   @override
   Future<void> saveSettings(AppSettings settings) async {

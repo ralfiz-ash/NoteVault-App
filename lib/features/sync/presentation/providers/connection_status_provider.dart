@@ -1,7 +1,9 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../app/di/connectivity_providers.dart';
+import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/connectivity_status.dart';
+import '../../domain/usecases/observe_connectivity.dart';
 
 part 'connection_status_provider.g.dart';
 
@@ -12,5 +14,6 @@ part 'connection_status_provider.g.dart';
 /// re-subscribing whenever a banner appears or disappears. The stream
 /// subscription is closed by Riverpod when the container is disposed.
 @Riverpod(keepAlive: true)
-Stream<ConnectivityStatus> connectionStatus(Ref ref) =>
-    ref.watch(connectivityRepositoryProvider).watchStatus();
+Stream<ConnectivityStatus> connectionStatus(Ref ref) => ObserveConnectivity(
+  ref.watch(connectivityRepositoryProvider),
+)(const NoParams());
