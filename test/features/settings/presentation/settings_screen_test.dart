@@ -55,6 +55,29 @@ void main() {
     expect(top(tester, 'Apple'), lessThan(top(tester, 'Banana')));
   });
 
+  testWidgets('About shows the app name and installed version', (tester) async {
+    await pumpApp(tester);
+    await openSettings(tester);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('about-app')),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
+
+    final about = find.byKey(const Key('about-app'));
+    expect(
+      find.descendant(of: about, matching: find.text('NoteVault')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: about,
+        matching: find.text('Version $testAppVersion'),
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('theme changes apply immediately and are saved', (tester) async {
     await pumpApp(tester);
     await openSettings(tester);

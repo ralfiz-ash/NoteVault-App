@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/di/app_info_providers.dart';
+import '../../../../app/di/core_providers.dart';
 import '../../../../core/presentation/content_width.dart';
 import '../../../notes/domain/entities/note_sort.dart';
 import '../../domain/entities/app_settings.dart';
@@ -117,6 +119,9 @@ class SettingsScreen extends ConsumerWidget {
               'Settings are saved on this device for your account.',
               style: Theme.of(context).textTheme.bodySmall,
             ),
+            const SizedBox(height: 32),
+            const _Section('About'),
+            const _AboutApp(),
           ],
         ),
       ),
@@ -138,6 +143,34 @@ class _Section extends StatelessWidget {
       style: Theme.of(context).textTheme.titleMedium,
     ),
   );
+}
+
+/// App name and installed version (from the package metadata).
+class _AboutApp extends ConsumerWidget {
+  const _AboutApp();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final textTheme = Theme.of(context).textTheme;
+    final name = ref.watch(appConfigProvider.select((c) => c.appName));
+    // Static metadata: nothing to show while it is read or if it is
+    // unavailable (no spinner or retry needed).
+    final version = ref.watch(appVersionProvider).value;
+    return Column(
+      key: const Key('about-app'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(name, style: textTheme.bodyLarge),
+        if (version != null)
+          Text(
+            'Version $version',
+            style: textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+      ],
+    );
+  }
 }
 
 class _Label extends StatelessWidget {
