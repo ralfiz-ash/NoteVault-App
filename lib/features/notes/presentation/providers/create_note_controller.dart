@@ -26,7 +26,8 @@ class CreateNoteController extends _$CreateNoteController {
     final result = await AsyncValue.guard<Note?>(
       () => ref.read(createNoteProvider)(draft),
     );
-    // Only after the note is stored (locally; works offline). No note data.
+    // Only after the new note is stored (locally; works offline). No note
+    // data. Edits are not reported.
     if (!result.hasError) analytics.logNoteSaved();
     if (ref.mounted) state = result;
     return result.value;

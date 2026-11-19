@@ -97,14 +97,14 @@ void main() {
       expect(analytics.events, ['note_saved']);
     });
 
-    test('saving an edit logs note_saved once', () async {
+    test('saving an edit logs nothing (new notes only)', () async {
       final original = buildNote(id: 'n', title: 'Old');
       notes.seed([original]);
       await container
           .read(updateNoteControllerProvider.notifier)
           .save(original, const NoteDraft(title: 'New'));
       await pumpEventQueue();
-      expect(analytics.events, ['note_saved']);
+      expect(analytics.events, isEmpty);
     });
 
     test('a failed save logs nothing', () async {

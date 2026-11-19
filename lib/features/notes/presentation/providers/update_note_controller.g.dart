@@ -52,7 +52,7 @@ final class UpdateNoteControllerProvider
 }
 
 String _$updateNoteControllerHash() =>
-    r'ee7427d60b83c80f08fcaa8485546c0342a5737f';
+    r'c67ebb597a58f9ea31dd73c79b45a7a17734119e';
 
 /// Saves edits for the "edit note" editor.
 ///

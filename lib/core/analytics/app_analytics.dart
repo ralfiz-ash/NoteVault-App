@@ -10,6 +10,6 @@ abstract interface class AppAnalytics {
   /// A sign-in completed successfully.
   void logLogin(LoginMethod method);
 
-  /// A note was saved successfully (created or edited).
+  /// A new note was saved successfully (edits are not reported).
   void logNoteSaved();
 }
