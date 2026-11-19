@@ -558,3 +558,26 @@ now apply to every screen:
 3. Add models, a data source interface and a repository implementation in `data`.
 4. Build screens and Riverpod providers in `presentation`.
 5. Run `flutter test`; the architecture test will flag wrong imports.
+
+## Account deletion
+
+```
+DeleteAccountScreen -> DeleteAccountController -> DeleteAccount (use case)
+   1. AuthRepository.reauthenticateWith{Password,Google}
+   2. UserDataRepository.discardPendingSync   (sync_queue)
+   3. UserDataRepository.deleteCloudData      (users/{uid}/notes, server only)
+   4. UserDataRepository.deleteLocalData      (all tables of the user's DB)
+   5. AuthRepository.deleteCurrentUser        (signs out -> login screen)
+```
+
+- Reached from Settings → Account → Delete account (`/settings/delete-account`).
+  Required by Google Play for apps with account creation (plus a web link for
+  deletion requests, outside the app).
+- Order: identity first (also fails fast offline), uploads stopped before the
+  cloud delete so nothing is re-uploaded, cloud before the account (the
+  security rules need the signed-in owner). A failed step stops the rest and
+  keeps the account, so the user can retry.
+- Local rows are deleted rather than the database file, so it works the same
+  on Android, iOS and the web.
+- Email accounts confirm with their password, Google-only accounts with
+  Google (`AppUser.signInMethods`). Needs a connection.

@@ -63,6 +63,10 @@ class AuthExceptionMapper implements ExceptionMapper {
         'This sign-in method is not enabled for NoteVault.',
       ),
       'requires-recent-login' => auth('Please sign in again to continue.'),
+      'user-mismatch' => auth(
+        'Please choose the Google account you use for NoteVault.',
+      ),
+      'no-current-user' => auth('You are not signed in.'),
       'popup-closed-by-user' ||
       'cancelled-popup-request' ||
       'web-context-canceled' => CancelledFailure(cause: e, stackTrace: st),

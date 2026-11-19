@@ -4,6 +4,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notevalult/features/auth/data/datasources/google_id_token_source.dart';
 
+class FakeUserInfo extends Fake implements UserInfo {
+  FakeUserInfo(this.providerId);
+
+  @override
+  final String providerId;
+}
+
 class FakeUser extends Fake implements User {
   FakeUser({
     required this.uid,
@@ -11,7 +18,51 @@ class FakeUser extends Fake implements User {
     this.displayName,
     this.photoURL,
     this.emailVerified = false,
-  });
+    List<String> providerIds = const [],
+  }) : providerData = [for (final id in providerIds) FakeUserInfo(id)];
+
+  @override
+  final List<UserInfo> providerData;
+
+  /// Reauthentication / deletion calls on this user.
+  final calls = <String>[];
+  AuthCredential? lastCredential;
+
+  /// If set, the next reauthentication / deletion throws it.
+  Object? nextError;
+
+  /// Called after [delete] succeeds (the fake auth signs out).
+  void Function()? onDeleted;
+
+  Future<void> _step(String call) async {
+    calls.add(call);
+    final error = nextError;
+    if (error != null) {
+      nextError = null;
+      throw error;
+    }
+  }
+
+  @override
+  Future<UserCredential> reauthenticateWithCredential(
+    AuthCredential credential,
+  ) async {
+    lastCredential = credential;
+    await _step('reauth:${credential.providerId}');
+    return FakeUserCredential(this);
+  }
+
+  @override
+  Future<UserCredential> reauthenticateWithPopup(AuthProvider provider) async {
+    await _step('reauthPopup:${provider.providerId}');
+    return FakeUserCredential(this);
+  }
+
+  @override
+  Future<void> delete() async {
+    await _step('delete');
+    onDeleted?.call();
+  }
 
   @override
   final String uid;
@@ -46,6 +97,7 @@ class FakeFirebaseAuth extends Fake implements FirebaseAuth {
 
   void emit(User? user) {
     _current = user;
+    if (user is FakeUser) user.onDeleted = () => emit(null);
     _changes.add(user);
   }
 

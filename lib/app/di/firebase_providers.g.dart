@@ -533,3 +533,59 @@ final class NoteRemoteRepositoryProvider
 
 String _$noteRemoteRepositoryHash() =>
     r'4db47865a95cd60a6dc86eb7261f7df7c514381e';
+
+/// Removes the signed-in user's data in Firestore and in their own local
+/// database. Rebuilt with the database when the user changes.
+
+@ProviderFor(userDataRepository)
+final userDataRepositoryProvider = UserDataRepositoryProvider._();
+
+/// Removes the signed-in user's data in Firestore and in their own local
+/// database. Rebuilt with the database when the user changes.
+
+final class UserDataRepositoryProvider
+    extends
+        $FunctionalProvider<
+          UserDataRepository,
+          UserDataRepository,
+          UserDataRepository
+        >
+    with $Provider<UserDataRepository> {
+  /// Removes the signed-in user's data in Firestore and in their own local
+  /// database. Rebuilt with the database when the user changes.
+  UserDataRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'userDataRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$userDataRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<UserDataRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  UserDataRepository create(Ref ref) {
+    return userDataRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UserDataRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UserDataRepository>(value),
+    );
+  }
+}
+
+String _$userDataRepositoryHash() =>
+    r'9ed1ef61fde51ec9f5c596d86f3de95061cb0e5b';

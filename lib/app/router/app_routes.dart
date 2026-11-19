@@ -5,6 +5,7 @@ abstract final class AppRoutes {
   static const folders = '/folders';
   static const tags = '/tags';
   static const settings = '/settings';
+  static const deleteAccount = '/settings/delete-account';
 
   static const newNote = '/notes/new';
   static String note(String id) => '/notes/$id';

@@ -63,4 +63,15 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> signOut() => _guard(remote.signOut);
+
+  @override
+  Future<void> reauthenticateWithPassword(String password) =>
+      _guard(() => remote.reauthenticateWithPassword(password));
+
+  @override
+  Future<void> reauthenticateWithGoogle() =>
+      _guard(remote.reauthenticateWithGoogle);
+
+  @override
+  Future<void> deleteCurrentUser() => _guard(remote.deleteCurrentUser);
 }

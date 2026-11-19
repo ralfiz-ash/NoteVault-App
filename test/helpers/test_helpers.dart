@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/misc.dart' show ProviderListenable;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notevalult/features/auth/domain/entities/sign_in_method.dart';
 import 'package:notevalult/app/di/app_info_providers.dart';
 import 'package:notevalult/core/analytics/app_analytics.dart';
 import 'package:notevalult/app/di/connectivity_providers.dart';
@@ -65,7 +66,11 @@ Future<T> readFuture<T>(
 Override signedInOverride([AppUser user = testUser]) =>
     authRepositoryProvider.overrideWithValue(FakeAuthRepository.signedIn(user));
 
-const testUser = AppUser(uid: 'test-user', email: 'tester@example.com');
+const testUser = AppUser(
+  uid: 'test-user',
+  email: 'tester@example.com',
+  signInMethods: {SignInMethod.emailPassword},
+);
 
 /// Overrides that let the whole app run in widget tests without Firebase,
 /// platform plugins or the real database file.
@@ -81,7 +86,11 @@ List<Override> appTestOverrides({
   SyncRepository? sync,
   SettingsRepository? settings,
   FakeAnalytics? analytics,
+  FakeUserDataRepository? userData,
 }) => [
+  userDataRepositoryProvider.overrideWithValue(
+    userData ?? FakeUserDataRepository(),
+  ),
   settingsRepositoryProvider.overrideWithValue(
     settings ?? FakeSettingsRepository(),
   ),

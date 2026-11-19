@@ -29,4 +29,16 @@ abstract interface class AuthRepository {
   Future<void> sendPasswordResetEmail(String email);
 
   Future<void> signOut();
+
+  /// Confirms the signed-in user's identity again with their password (needed
+  /// before sensitive actions such as deleting the account).
+  Future<void> reauthenticateWithPassword(String password);
+
+  /// Confirms the signed-in user's identity again with their Google account.
+  /// Throws `CancelledFailure` if the user closes the Google flow.
+  Future<void> reauthenticateWithGoogle();
+
+  /// Permanently deletes the signed-in user's account; the user is signed out.
+  /// Call a `reauthenticate*` method first.
+  Future<void> deleteCurrentUser();
 }
