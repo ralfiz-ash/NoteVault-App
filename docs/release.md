@@ -60,11 +60,17 @@ able to reach it (it is cached until `flutter clean`).
 
 ## Launcher icon
 
-Sources live in `assets/branding/` (not bundled into the app). Regenerate the
-Android icons with:
+Sources live in `assets/branding/` (not bundled into the app):
+`notevault_icon.png` + `notevault_icon_adaptive.png` for Android and
+`notevault_icon_ios.png` (1024×1024, no transparency; also the App Store icon)
+for iOS. Regenerate the icons with:
 
 ```bash
 dart run flutter_launcher_icons
 ```
 
 `notevault_icon.png` (512×512) is also the Google Play store icon.
+
+The tool also rewrites a line in `ios/Runner.xcodeproj/project.pbxproj`
+(`ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS`); revert that
+file after regenerating.

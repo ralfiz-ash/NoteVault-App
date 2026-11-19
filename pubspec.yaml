@@ -115,8 +115,11 @@ flutter:
 # stays whole under every Android icon mask (circle, squircle, square).
 flutter_launcher_icons:
   android: "ic_launcher"
-  ios: false
+  ios: true
   image_path: "assets/branding/notevault_icon.png"
+  # iOS/App Store: 1024x1024, no transparency (iOS rounds the corners).
+  image_path_ios: "assets/branding/notevault_icon_ios.png"
+  remove_alpha_ios: true
   min_sdk_android: 24
   adaptive_icon_background: "#D7B54A"
   adaptive_icon_foreground: "assets/branding/notevault_icon_adaptive.png"
