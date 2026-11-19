@@ -47,6 +47,7 @@ dependencies:
   cloud_firestore: ^7.1.0
   google_sign_in: ^7.2.0
   connectivity_plus: ^7.3.2
+  package_info_plus: ^10.2.2
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +65,7 @@ dev_dependencies:
   drift_dev: ^2.35.3
   fake_cloud_firestore: ^4.5.0
   fake_async: ^1.3.3
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -106,3 +108,19 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Launcher icons: `dart run flutter_launcher_icons` regenerates them from
+# assets/branding/ (sources are not bundled into the app).
+# The adaptive layer is the logo at ~62% on its own extended gradient, so it
+# stays whole under every Android icon mask (circle, squircle, square).
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/branding/notevault_icon.png"
+  # iOS/App Store: 1024x1024, no transparency (iOS rounds the corners).
+  image_path_ios: "assets/branding/notevault_icon_ios.png"
+  remove_alpha_ios: true
+  min_sdk_android: 24
+  adaptive_icon_background: "#D7B54A"
+  adaptive_icon_foreground: "assets/branding/notevault_icon_adaptive.png"
+  adaptive_icon_foreground_inset: 0

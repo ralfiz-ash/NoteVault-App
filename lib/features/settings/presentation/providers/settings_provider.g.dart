@@ -17,10 +17,10 @@ part of 'settings_provider.dart';
 /// - signed out: the defaults, nothing stored;
 /// - user signs in (or the app starts with a session): the state is the
 ///   defaults at once and that user's saved settings replace it as soon as
-///   they are read from their own database ([ready] completes then);
-/// - sign-out / another user: rebuilt from scratch (a new notifier), so one
-///   user's settings never show for another; a late load for the previous
-///   user is ignored.
+///   they are read from their own database;
+/// - sign-out / another user: [build] runs again and resets to the defaults,
+///   so one user's settings never show for another; a late load started for
+///   the previous user is ignored (generation check).
 ///
 /// Changes apply at once and are then saved locally (never synced, works
 /// offline). Not keepAlive: the app root always watches it.
@@ -37,10 +37,10 @@ final settingsProvider = SettingsProvider._();
 /// - signed out: the defaults, nothing stored;
 /// - user signs in (or the app starts with a session): the state is the
 ///   defaults at once and that user's saved settings replace it as soon as
-///   they are read from their own database ([ready] completes then);
-/// - sign-out / another user: rebuilt from scratch (a new notifier), so one
-///   user's settings never show for another; a late load for the previous
-///   user is ignored.
+///   they are read from their own database;
+/// - sign-out / another user: [build] runs again and resets to the defaults,
+///   so one user's settings never show for another; a late load started for
+///   the previous user is ignored (generation check).
 ///
 /// Changes apply at once and are then saved locally (never synced, works
 /// offline). Not keepAlive: the app root always watches it.
@@ -54,10 +54,10 @@ final class SettingsProvider extends $NotifierProvider<Settings, AppSettings> {
   /// - signed out: the defaults, nothing stored;
   /// - user signs in (or the app starts with a session): the state is the
   ///   defaults at once and that user's saved settings replace it as soon as
-  ///   they are read from their own database ([ready] completes then);
-  /// - sign-out / another user: rebuilt from scratch (a new notifier), so one
-  ///   user's settings never show for another; a late load for the previous
-  ///   user is ignored.
+  ///   they are read from their own database;
+  /// - sign-out / another user: [build] runs again and resets to the defaults,
+  ///   so one user's settings never show for another; a late load started for
+  ///   the previous user is ignored (generation check).
   ///
   /// Changes apply at once and are then saved locally (never synced, works
   /// offline). Not keepAlive: the app root always watches it.
@@ -88,7 +88,7 @@ final class SettingsProvider extends $NotifierProvider<Settings, AppSettings> {
   }
 }
 
-String _$settingsHash() => r'e8688a66fca89d88dec7a3affb3927df7de6bf7c';
+String _$settingsHash() => r'63002a97499c05d02191b65b809499cdcb7f01e3';
 
 /// The signed-in user's settings (theme mode and notes sort): a synchronous
 /// `NotifierProvider` and the single source of truth for both. The app theme
@@ -99,10 +99,10 @@ String _$settingsHash() => r'e8688a66fca89d88dec7a3affb3927df7de6bf7c';
 /// - signed out: the defaults, nothing stored;
 /// - user signs in (or the app starts with a session): the state is the
 ///   defaults at once and that user's saved settings replace it as soon as
-///   they are read from their own database ([ready] completes then);
-/// - sign-out / another user: rebuilt from scratch (a new notifier), so one
-///   user's settings never show for another; a late load for the previous
-///   user is ignored.
+///   they are read from their own database;
+/// - sign-out / another user: [build] runs again and resets to the defaults,
+///   so one user's settings never show for another; a late load started for
+///   the previous user is ignored (generation check).
 ///
 /// Changes apply at once and are then saved locally (never synced, works
 /// offline). Not keepAlive: the app root always watches it.

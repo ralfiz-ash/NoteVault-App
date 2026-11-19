@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/misc.dart' show ProviderListenable;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notevalult/app/di/app_info_providers.dart';
 import 'package:notevalult/app/di/connectivity_providers.dart';
 import 'package:notevalult/app/di/core_providers.dart';
 import 'package:notevalult/app/di/firebase_providers.dart';
@@ -60,6 +61,9 @@ const testUser = AppUser(uid: 'test-user', email: 'tester@example.com');
 
 /// Overrides that let the whole app run in widget tests without Firebase,
 /// platform plugins or the real database file.
+/// The version the app reports in widget tests (no platform metadata).
+const testAppVersion = '1.0.0';
+
 List<Override> appTestOverrides({
   FakeAuthRepository? auth,
   NoteRepository? notes,
@@ -76,6 +80,7 @@ List<Override> appTestOverrides({
   folderRepositoryProvider.overrideWithValue(folders ?? FakeFolderRepository()),
   tagRepositoryProvider.overrideWithValue(tags ?? FakeTagRepository()),
   appLoggerProvider.overrideWithValue(const NoOpLogger()),
+  appVersionProvider.overrideWith((_) async => testAppVersion),
   // Signed in by default, so the router shows the app, not the auth screens.
   authRepositoryProvider.overrideWithValue(
     auth ?? FakeAuthRepository.signedIn(testUser),
