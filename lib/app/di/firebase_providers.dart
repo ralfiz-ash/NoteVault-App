@@ -4,7 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/analytics/app_analytics.dart';
 import '../../core/errors/exception_mapper.dart';
+import '../../core/firebase/firebase_app_analytics.dart';
 import '../../core/firebase/firestore_exception_mapper.dart';
 import '../../features/auth/data/datasources/auth_remote_data_source.dart';
 import '../../features/auth/data/datasources/firebase_auth_remote_data_source.dart';
@@ -32,6 +34,13 @@ part 'firebase_providers.g.dart';
 
 @Riverpod(keepAlive: true)
 FirebaseAuth firebaseAuth(Ref ref) => FirebaseAuth.instance;
+
+/// Product analytics (Firebase Analytics). Exposed as a provider only so that
+/// presentation never imports Firebase and tests can swap in a fake; the
+/// events are fire-and-forget side effects, never app state.
+@Riverpod(keepAlive: true)
+AppAnalytics appAnalytics(Ref ref) =>
+    FirebaseAppAnalytics(ref.watch(appLoggerProvider));
 
 @Riverpod(keepAlive: true)
 FirebaseFirestore firebaseFirestore(Ref ref) => FirebaseFirestore.instance;

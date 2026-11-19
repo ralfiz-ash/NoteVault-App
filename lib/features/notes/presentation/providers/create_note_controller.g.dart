@@ -52,7 +52,7 @@ final class CreateNoteControllerProvider
 }
 
 String _$createNoteControllerHash() =>
-    r'36c39679f7e153be18893f7b98db85594b8d64b5';
+    r'da6c82a11b72bd590aad05e068a26a5efaa176c5';
 
 /// Creates a note for the "new note" editor.
 ///

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:notevalult/core/analytics/app_analytics.dart';
 import 'package:notevalult/core/errors/failure.dart';
 import 'package:notevalult/features/auth/domain/entities/app_user.dart';
 import 'package:notevalult/features/auth/domain/repositories/auth_repository.dart';
@@ -438,4 +439,15 @@ class FakeSettingsRepository implements SettingsRepository {
     saves++;
     stored = settings;
   }
+}
+
+/// Records analytics events instead of sending them.
+class FakeAnalytics implements AppAnalytics {
+  final List<String> events = [];
+
+  @override
+  void logLogin(LoginMethod method) => events.add('login:${method.name}');
+
+  @override
+  void logNoteSaved() => events.add('note_saved');
 }

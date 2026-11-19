@@ -1,5 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../app/di/firebase_providers.dart';
+import '../../../../core/analytics/app_analytics.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/usecases/email_password_params.dart';
 import 'auth_use_case_providers.dart';
@@ -26,6 +28,7 @@ class AuthController extends _$AuthController {
         () => ref.read(signInWithEmailProvider)(
           EmailPasswordParams(email: email, password: password),
         ),
+        loginMethod: LoginMethod.email,
       );
 
   Future<bool> register({required String email, required String password}) =>
@@ -35,17 +38,30 @@ class AuthController extends _$AuthController {
         ),
       );
 
-  Future<bool> signInWithGoogle() =>
-      _run(() => ref.read(signInWithGoogleProvider)(const NoParams()));
+  Future<bool> signInWithGoogle() => _run(
+    () => ref.read(signInWithGoogleProvider)(const NoParams()),
+    loginMethod: LoginMethod.google,
+  );
 
   Future<bool> signOut() =>
       _run(() => ref.read(signOutProvider)(const NoParams()));
 
   /// Ignores a second request while one is running (no double submit).
-  Future<bool> _run(Future<Object?> Function() action) async {
+  ///
+  /// [loginMethod]: report a `login` analytics event, once, only when the
+  /// sign-in succeeded (never for failures or a cancelled Google sign-in).
+  Future<bool> _run(
+    Future<Object?> Function() action, {
+    LoginMethod? loginMethod,
+  }) async {
     if (state.isLoading) return false;
+    // Read before awaiting: the controller may be disposed by then.
+    final analytics = ref.read(appAnalyticsProvider);
     state = const AsyncLoading();
     final result = await AsyncValue.guard<void>(action);
+    if (loginMethod != null && !result.hasError) {
+      analytics.logLogin(loginMethod);
+    }
     if (ref.mounted) state = result;
     return !result.hasError;
   }
