@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../app/di/firebase_providers.dart';
 import '../../domain/entities/note.dart';
 import '../../domain/entities/note_draft.dart';
 import 'note_use_case_providers.dart';
@@ -21,10 +22,13 @@ class UpdateNoteController extends _$UpdateNoteController {
   /// `null` if it failed.
   Future<Note?> save(Note original, NoteDraft draft) async {
     if (state.isLoading) return null;
+    final analytics = ref.read(appAnalyticsProvider);
     state = const AsyncLoading();
     final result = await AsyncValue.guard<Note?>(
       () => ref.read(updateNoteProvider)(draft.applyTo(original)),
     );
+    // Only after the note is stored (locally; works offline). No note data.
+    if (!result.hasError) analytics.logNoteSaved();
     if (ref.mounted) state = result;
     return result.value;
   }

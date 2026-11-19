@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/misc.dart' show ProviderListenable;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notevalult/core/analytics/app_analytics.dart';
 import 'package:notevalult/app/di/connectivity_providers.dart';
 import 'package:notevalult/app/di/core_providers.dart';
 import 'package:notevalult/app/di/firebase_providers.dart';
@@ -22,9 +23,16 @@ import 'fake_repositories.dart';
 
 /// Creates a [ProviderContainer] that is disposed when the test ends.
 /// Pass fake repositories/data sources through [overrides].
-ProviderContainer createContainer({List<Override> overrides = const []}) {
+ProviderContainer createContainer({
+  List<Override> overrides = const [],
+  AppAnalytics? analytics,
+}) {
   final container = ProviderContainer(
-    overrides: overrides,
+    overrides: [
+      // No real Firebase Analytics in tests.
+      appAnalyticsProvider.overrideWithValue(analytics ?? FakeAnalytics()),
+      ...overrides,
+    ],
     retry: providerRetry,
   );
   addTearDown(container.dispose);
@@ -68,6 +76,7 @@ List<Override> appTestOverrides({
   FakeConnectivityRepository? connectivity,
   SyncRepository? sync,
   SettingsRepository? settings,
+  FakeAnalytics? analytics,
 }) => [
   settingsRepositoryProvider.overrideWithValue(
     settings ?? FakeSettingsRepository(),
@@ -76,6 +85,7 @@ List<Override> appTestOverrides({
   folderRepositoryProvider.overrideWithValue(folders ?? FakeFolderRepository()),
   tagRepositoryProvider.overrideWithValue(tags ?? FakeTagRepository()),
   appLoggerProvider.overrideWithValue(const NoOpLogger()),
+  appAnalyticsProvider.overrideWithValue(analytics ?? FakeAnalytics()),
   // Signed in by default, so the router shows the app, not the auth screens.
   authRepositoryProvider.overrideWithValue(
     auth ?? FakeAuthRepository.signedIn(testUser),

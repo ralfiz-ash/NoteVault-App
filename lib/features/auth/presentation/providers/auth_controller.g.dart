@@ -63,7 +63,7 @@ final class AuthControllerProvider
   AuthController create() => AuthController();
 }
 
-String _$authControllerHash() => r'0fcd804af3d4b4417f81185fc351566cbfe01581';
+String _$authControllerHash() => r'd79fc4d7778a3bdd213e2bf2a59ea93c5b37b6ca';
 
 /// Runs sign-in, registration, Google sign-in and sign-out for the screens.
 ///

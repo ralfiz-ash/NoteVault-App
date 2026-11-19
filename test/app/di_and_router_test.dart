@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notevalult/app/app.dart';
 import 'package:notevalult/app/di/core_providers.dart';
+import 'package:notevalult/app/provider_retry.dart';
 import 'package:notevalult/app/router/app_router.dart';
 import 'package:notevalult/core/config/app_config.dart';
 import 'package:notevalult/core/logging/app_logger.dart';
@@ -44,7 +45,12 @@ void main() {
     testWidgets('unknown location shows the error screen and can recover', (
       tester,
     ) async {
-      final container = createContainer(overrides: appTestOverrides());
+      // appTestOverrides already fakes analytics, so no createContainer.
+      final container = ProviderContainer(
+        overrides: appTestOverrides(),
+        retry: providerRetry,
+      );
+      addTearDown(container.dispose);
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
