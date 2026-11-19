@@ -23,4 +23,10 @@ abstract interface class AuthRemoteDataSource {
   Future<void> sendPasswordResetEmail(String email);
 
   Future<void> signOut();
+
+  Future<void> reauthenticateWithPassword(String password);
+
+  Future<void> reauthenticateWithGoogle();
+
+  Future<void> deleteCurrentUser();
 }

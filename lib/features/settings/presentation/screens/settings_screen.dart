@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/di/app_info_providers.dart';
 import '../../../../app/di/core_providers.dart';
+import '../../../../app/router/app_routes.dart';
 import '../../../../core/presentation/content_width.dart';
 import '../../../notes/domain/entities/note_sort.dart';
 import '../../domain/entities/app_settings.dart';
@@ -118,6 +120,24 @@ class SettingsScreen extends ConsumerWidget {
             Text(
               'Settings are saved on this device for your account.',
               style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 32),
+            const _Section('Account'),
+            ListTile(
+              key: const Key('delete-account-tile'),
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(
+                Icons.delete_forever_outlined,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              title: Text(
+                'Delete account',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+              subtitle: const Text(
+                'Permanently delete your account and all your notes',
+              ),
+              onTap: () => context.push(AppRoutes.deleteAccount),
             ),
             const SizedBox(height: 32),
             const _Section('About'),

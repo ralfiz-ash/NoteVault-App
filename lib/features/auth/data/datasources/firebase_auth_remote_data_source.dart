@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../../../core/errors/failure.dart';
+
 import '../models/app_user_model.dart';
 import 'auth_remote_data_source.dart';
 import 'google_id_token_source.dart';
@@ -88,6 +90,73 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
       }
     }
     await _auth.signOut();
+  }
+
+  @override
+  Future<void> reauthenticateWithPassword(String password) async {
+    final user = _requireSignedIn();
+    final email = user.email;
+    if (email == null) {
+      throw FirebaseAuthException(
+        code: 'no-email',
+        message: 'This account has no email address.',
+      );
+    }
+    try {
+      await user.reauthenticateWithCredential(
+        EmailAuthProvider.credential(email: email, password: password),
+      );
+    } on FirebaseAuthException catch (e, st) {
+      // The user is known here: only the password can be wrong.
+      if (const {
+        'wrong-password',
+        'invalid-credential',
+        'INVALID_LOGIN_CREDENTIALS',
+      }.contains(e.code)) {
+        throw AuthFailure(
+          message: 'Incorrect password.',
+          cause: e,
+          stackTrace: st,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> reauthenticateWithGoogle() async {
+    final user = _requireSignedIn();
+    if (useWebPopupForGoogle) {
+      await user.reauthenticateWithPopup(GoogleAuthProvider());
+      return;
+    }
+    final idToken = await _google.fetchIdToken();
+    await user.reauthenticateWithCredential(
+      GoogleAuthProvider.credential(idToken: idToken),
+    );
+  }
+
+  @override
+  Future<void> deleteCurrentUser() async {
+    await _requireSignedIn().delete(); // also signs the user out
+    if (!useWebPopupForGoogle) {
+      try {
+        await _google.signOut(); // forget the chosen Google account
+      } on Object {
+        // Best effort: the Firebase account is already gone.
+      }
+    }
+  }
+
+  User _requireSignedIn() {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'no-current-user',
+        message: 'Nobody is signed in.',
+      );
+    }
+    return user;
   }
 
   AppUserModel _requireUser(UserCredential credential) {

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:notevalult/features/account/domain/repositories/user_data_repository.dart';
 import 'package:notevalult/core/analytics/app_analytics.dart';
 import 'package:notevalult/core/errors/failure.dart';
 import 'package:notevalult/features/auth/domain/entities/app_user.dart';
@@ -102,6 +103,44 @@ class FakeAuthRepository implements AuthRepository {
     await _step('signOut');
     emit(null);
   }
+
+  @override
+  Future<void> reauthenticateWithPassword(String password) =>
+      _step('reauth:password');
+
+  @override
+  Future<void> reauthenticateWithGoogle() => _step('reauth:google');
+
+  @override
+  Future<void> deleteCurrentUser() async {
+    await _step('deleteUser');
+    emit(null);
+  }
+}
+
+/// Records account-data deletion steps (into [log], e.g. shared with a
+/// [FakeAuthRepository]'s `calls` to check the order). Set [failOn] to make
+/// a step throw.
+class FakeUserDataRepository implements UserDataRepository {
+  FakeUserDataRepository({List<String>? log}) : log = log ?? [];
+
+  final List<String> log;
+  final Map<String, Failure> failOn = {};
+
+  Future<void> _step(String step) async {
+    log.add(step);
+    final failure = failOn[step];
+    if (failure != null) throw failure;
+  }
+
+  @override
+  Future<void> discardPendingSync() => _step('discardPendingSync');
+
+  @override
+  Future<void> deleteCloudData(String userId) => _step('deleteCloud:$userId');
+
+  @override
+  Future<void> deleteLocalData() => _step('deleteLocal');
 }
 
 /// In-memory [NoteRepository] with the same semantics as the real one
