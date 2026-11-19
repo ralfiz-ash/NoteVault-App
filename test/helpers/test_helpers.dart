@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/misc.dart' show ProviderListenable;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notevalult/features/auth/domain/entities/sign_in_method.dart';
+import 'package:notevalult/app/di/app_info_providers.dart';
+import 'package:notevalult/core/analytics/app_analytics.dart';
 import 'package:notevalult/app/di/connectivity_providers.dart';
 import 'package:notevalult/app/di/core_providers.dart';
 import 'package:notevalult/app/di/firebase_providers.dart';
@@ -22,9 +25,16 @@ import 'fake_repositories.dart';
 
 /// Creates a [ProviderContainer] that is disposed when the test ends.
 /// Pass fake repositories/data sources through [overrides].
-ProviderContainer createContainer({List<Override> overrides = const []}) {
+ProviderContainer createContainer({
+  List<Override> overrides = const [],
+  AppAnalytics? analytics,
+}) {
   final container = ProviderContainer(
-    overrides: overrides,
+    overrides: [
+      // No real Firebase Analytics in tests.
+      appAnalyticsProvider.overrideWithValue(analytics ?? FakeAnalytics()),
+      ...overrides,
+    ],
     retry: providerRetry,
   );
   addTearDown(container.dispose);
@@ -56,10 +66,17 @@ Future<T> readFuture<T>(
 Override signedInOverride([AppUser user = testUser]) =>
     authRepositoryProvider.overrideWithValue(FakeAuthRepository.signedIn(user));
 
-const testUser = AppUser(uid: 'test-user', email: 'tester@example.com');
+const testUser = AppUser(
+  uid: 'test-user',
+  email: 'tester@example.com',
+  signInMethods: {SignInMethod.emailPassword},
+);
 
 /// Overrides that let the whole app run in widget tests without Firebase,
 /// platform plugins or the real database file.
+/// The version the app reports in widget tests (no platform metadata).
+const testAppVersion = '1.0.0';
+
 List<Override> appTestOverrides({
   FakeAuthRepository? auth,
   NoteRepository? notes,
@@ -68,7 +85,12 @@ List<Override> appTestOverrides({
   FakeConnectivityRepository? connectivity,
   SyncRepository? sync,
   SettingsRepository? settings,
+  FakeAnalytics? analytics,
+  FakeUserDataRepository? userData,
 }) => [
+  userDataRepositoryProvider.overrideWithValue(
+    userData ?? FakeUserDataRepository(),
+  ),
   settingsRepositoryProvider.overrideWithValue(
     settings ?? FakeSettingsRepository(),
   ),
@@ -76,6 +98,8 @@ List<Override> appTestOverrides({
   folderRepositoryProvider.overrideWithValue(folders ?? FakeFolderRepository()),
   tagRepositoryProvider.overrideWithValue(tags ?? FakeTagRepository()),
   appLoggerProvider.overrideWithValue(const NoOpLogger()),
+  appVersionProvider.overrideWith((_) async => testAppVersion),
+  appAnalyticsProvider.overrideWithValue(analytics ?? FakeAnalytics()),
   // Signed in by default, so the router shows the app, not the auth screens.
   authRepositoryProvider.overrideWithValue(
     auth ?? FakeAuthRepository.signedIn(testUser),

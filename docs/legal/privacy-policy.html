@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NoteVault Privacy Policy</title>
+  <meta name="description" content="How the NoteVault notes app collects, uses and protects your data.">
+  <style>
+:root {
+  --bg: #fdfbd4;
+  --text: #1f1d12;
+  --muted: #5c5840;
+  --accent: #7a5e00;
+  --card: #f3efbc;
+  --border: #d6d09a;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1d1c16;
+    --text: #f7f5df;
+    --muted: #b8b39e;
+    --accent: #dac172;
+    --card: #2c2a20;
+    --border: #3b382c;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 4px; }
+h2 { font-size: 1.25rem; margin: 32px 0 8px; }
+p, li { color: var(--text); }
+.muted { color: var(--muted); }
+a { color: var(--accent); }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+}
+table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+th { font-weight: 600; }
+.table-wrap { overflow-x: auto; }
+footer { margin-top: 48px; font-size: 0.9rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>NoteVault Privacy Policy</h1>
+  <p class="muted">Effective date: 19 November 2026</p>
+
+  <p>
+    NoteVault is a notes app for Android and iOS developed by
+    <strong>Muhammed Ashiq PP</strong> ("we", "us"). This policy explains what
+    data NoteVault collects, why, who processes it, how long it is kept and
+    how you can delete it.
+  </p>
+
+  <div class="card">
+    <strong>In short:</strong> we collect only what is needed to give you an
+    account and keep your notes in sync across your devices, plus basic usage
+    analytics. We do not sell your data, we do not show ads, and you can
+    delete your account and all your notes at any time from inside the app.
+  </div>
+
+  <h2>1. Data we collect</h2>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Data</th><th>Why</th><th>Where it is stored</th></tr>
+    <tr>
+      <td><strong>Account details</strong>: email address, a user ID, and
+        your password (email accounts). If you sign in with Google: your
+        Google account email, name and profile photo, as provided by
+        Google.</td>
+      <td>To create your account, sign you in and keep your notes private to
+        you. We never see or store your password; Firebase Authentication
+        handles it securely.</td>
+      <td>Google Firebase Authentication</td>
+    </tr>
+    <tr>
+      <td><strong>Your notes</strong>: title, content, folder name, tags,
+        created and edited dates.</td>
+      <td>To show your notes, let you use them offline and sync them to your
+        other devices.</td>
+      <td>On your device, and in Google Cloud Firestore (United States)</td>
+    </tr>
+    <tr>
+      <td><strong>Folders, tags and settings</strong> (theme, sort order)</td>
+      <td>To organise your notes and remember your preferences.</td>
+      <td>On your device (folder names and tags are also saved with your notes
+        in the cloud)</td>
+    </tr>
+    <tr>
+      <td><strong>Usage analytics</strong>: that a sign-in succeeded (and
+        whether it used email or Google) and that a new note was saved, plus
+        information Google Analytics collects automatically, such as an app
+        instance ID, device model, operating system, app version, approximate
+        country/region, and app opens and session times. NoteVault does
+        not collect your device's advertising ID.</td>
+      <td>To understand how NoteVault is used and improve it. Analytics events
+        <strong>never</strong> contain your notes, your email address or your
+        password.</td>
+      <td>Google Analytics for Firebase</td>
+    </tr>
+  </table>
+  </div>
+  <p>
+    NoteVault does not access your contacts, photos, camera, microphone or
+    precise location, and does not collect or use the advertising ID.
+  </p>
+
+  <h2>2. How we use your data</h2>
+  <ul>
+    <li>To provide the app: your account, your notes and sync between your
+      devices.</li>
+    <li>To keep the service secure: only you, when signed in, can read or
+      change your notes.</li>
+    <li>To improve the app using aggregated usage statistics.</li>
+  </ul>
+  <p>We do not sell your data, use it for advertising, or use your notes for
+    any purpose other than showing them to you.</p>
+
+  <h2>3. Service providers</h2>
+  <p>
+    NoteVault runs on services provided by Google, which process data on our
+    behalf: Firebase Authentication, Cloud Firestore, Google Analytics for
+    Firebase and Google Sign-In. See
+    <a href="https://firebase.google.com/support/privacy">Privacy and Security
+    in Firebase</a> and the
+    <a href="https://policies.google.com/privacy">Google Privacy Policy</a>.
+    We share data with no one else, except where required by law.
+  </p>
+
+  <h2>4. Security</h2>
+  <p>
+    Data sent between the app and Google's services is encrypted in transit
+    (HTTPS/TLS) and Google encrypts stored data. Firestore security rules allow
+    only the signed-in owner to read or write their notes. On your device, your
+    notes are kept in the app's private storage, protected by your device's own
+    security (such as your screen lock).
+  </p>
+
+  <h2>5. How long we keep data</h2>
+  <ul>
+    <li>Your account and notes are kept until you delete the notes or your
+      account.</li>
+    <li>When you delete your account, your account, notes, folders, tags and
+      settings are deleted immediately from our active systems and from the
+      device you use. Copies may remain in Google's backups for a limited time
+      under Google's policies.</li>
+    <li>Usage analytics are not linked to your name or email and are kept for
+      the retention period configured in Google Analytics, after which they
+      are deleted automatically.</li>
+  </ul>
+
+  <h2 id="delete">6. Deleting your account and data</h2>
+  <p>
+    In the app: <strong>Settings → Account → Delete account</strong>. Confirm
+    with your password (or your Google account). This permanently deletes your
+    account and all your notes, folders, tags and settings, on all your
+    devices.
+  </p>
+  <p>
+    If you no longer have the app, see
+    <a href="delete-account.html">how to request account deletion</a>.
+  </p>
+
+  <h2>7. Your rights</h2>
+  <p>
+    Depending on where you live, you may have the right to access, correct,
+    export or delete your personal data, or to object to its processing. You
+    can view and edit your notes in the app and delete everything at any time.
+    For any other request, contact us using the details below; we will reply
+    within 30 days.
+  </p>
+
+  <h2>8. Children</h2>
+  <p>
+    NoteVault is not directed to children under 13, and we do not knowingly
+    collect data from them. If you believe a child has created an account,
+    contact us and we will delete it.
+  </p>
+
+  <h2>9. Changes to this policy</h2>
+  <p>
+    If we change this policy, we will update this page and its effective date.
+    For significant changes we will also inform you in the app.
+  </p>
+
+  <h2>10. Contact</h2>
+  <p>
+    Muhammed Ashiq PP<br>
+    Email: <a href="mailto:ashiqpp78@gmail.com">ashiqpp78@gmail.com</a>
+  </p>
+
+  <footer>NoteVault · <a href="delete-account.html">Delete your account</a></footer>
+</main>
+</body>
+</html>

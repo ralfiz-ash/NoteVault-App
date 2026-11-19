@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../features/account/presentation/screens/delete_account_screen.dart';
 import '../../features/auth/presentation/providers/auth_state_provider.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
@@ -52,6 +53,12 @@ GoRouter appRouter(Ref ref) {
           GoRoute(
             path: 'settings',
             builder: (context, state) => const SettingsScreen(),
+            routes: [
+              GoRoute(
+                path: 'delete-account',
+                builder: (context, state) => const DeleteAccountScreen(),
+              ),
+            ],
           ),
           // Declared before 'notes/:id' so "new" is not taken as an id.
           GoRoute(
